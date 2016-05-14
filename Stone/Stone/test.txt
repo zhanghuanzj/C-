@@ -1,0 +1,65 @@
+#include "Lexer.h"
+#include <fstream>
+class Lexer
+{
+
+};
+int main()
+{
+	//string s;
+	int line = 1;
+	string pSpace =  "\\s*";     //以>=0个空格开头的字符串
+	string pComment = "(//.*)";  //注释(1)
+	string pNumber = "([0-9]+)";   //数字(2)
+	string pLiteral = "(\"(\\\\\"|\\\\\\\\|\\\\n|[^\"])*\")"; //常量字符串(3,4)
+	string pIdentifier = "([A-Z_a-z][A-Z_a-z0-9]*|==|<=|>=|&&|\\|\\|";
+	string pPunc = "[!\"#$%&'()*+,-./:;<=>?@^_`{|}~[\\]])";  //dfff
+	pIdentifier = pIdentifier+"|"+pPunc;  //标识符(5)
+	string pPattern = pSpace+"("+pComment+"|"+pNumber+"|"+pLiteral+"|"+pIdentifier+")?";
+	regex r(pPattern);
+
+	fstream fio = fstream("test.txt");
+	fstream fio2 = fstream("out.txt");
+
+	while (!fio.eof())
+	{
+		string s;
+		getline(fio,s);
+		fio2<<s<<endl;
+		smatch match;
+		int left = 0;
+		int right = s.size();
+		while (left<right)
+		{
+			//cout<<s.substr(left,right)<<endl;
+			string str = s.substr(left);
+			if (regex_search(str,match,r))
+			{
+				if (match[1].matched)
+				{
+					if (match[2].matched)
+					{
+						fio2<<"COM:"<<match[1]<<endl;
+					}
+					else if (match[3].matched)
+					{
+						fio2<<"NUM:"<<match[1]<<endl;
+					}
+					else if (match[4].matched)
+					{
+						fio2<<"STR:"<<match[1]<<endl;
+					}
+					else if (match[6].matched)
+					{
+						fio2<<"ID:"<<match[1]<<endl;
+					}
+				}
+				left += match.length();
+			}
+		}
+		fio2<<"-----------------------------------------------------------"<<endl;
+	}
+	fio2.close();
+}
+
+
