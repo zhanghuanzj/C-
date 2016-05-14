@@ -18,3 +18,6 @@ UI_DIR += ./GeneratedFiles
 RCC_DIR += ./GeneratedFiles
 win32:CONFIG += console
 include(Compiler.pri)
+
+RESOURCES += \
+    Icons/RUN.qrc

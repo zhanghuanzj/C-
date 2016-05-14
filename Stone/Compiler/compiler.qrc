@@ -1,4 +1,7 @@
 <RCC>
-    <qresource prefix="Compiler">
-    </qresource>
+  <qresource prefix="Compiler">
+    <file>Icons/Rocket.png</file>
+    <file>Icons/Close.gif</file>
+    <file>Icons/Run.gif</file>
+  </qresource>
 </RCC>

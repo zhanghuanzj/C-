@@ -91,6 +91,7 @@ void Lexer::showTokens()
 
 int main()
 {
+	//1.Lexical Analysis
 	Lexer lexer;
 	int line = 1;
 	fstream fio = fstream("test.txt");
