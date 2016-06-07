@@ -1,4 +1,9 @@
 #include "DirectXLib.h"
+#include <iostream>
+#include <windows.h>
+#include <sstream>
+using namespace std;
+
 
 bool DirectX::initialDirectX(HINSTANCE hInstance, HWND hWnd, int width, int height)
 {
@@ -36,23 +41,28 @@ bool DirectX::initialDirectX(HINSTANCE hInstance, HWND hWnd, int width, int heig
 	d3dpp.PresentationInterval       = D3DPRESENT_INTERVAL_IMMEDIATE;
 
 	//4.创建设备
-	d3d9->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, vertexProcessing, &d3dpp, &pD3DXDevice);
+	d3d9->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_REF, hWnd, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &pD3DXDevice);
 	d3d9->Release();
 
 	pD3DXDevice->CreateOffscreenPlainSurface(width, height, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &pD3DSurface, 0);
 	
 	return true;
 }
-
-int DirectX::drawPixel(int x,int y, DWORD color)
+void DirectX::lockSurface()
 {
 	// 创建并初始化锁定区域
-	D3DLOCKED_RECT LockRect;
 	memset(&LockRect, 0, sizeof(LockRect));
-
 	// 锁定
 	pD3DSurface->LockRect(&LockRect,NULL,D3DLOCK_DISCARD);
+}
 
+void DirectX::unlockSurface()
+{
+	// 解锁
+	pD3DSurface->UnlockRect();
+}
+void DirectX::drawPixel(int x,int y, DWORD color)
+{
 	/* 像素着色
 	Pointer to the locked bits. 
 	If a RECT was provided to the LockRect call, 
@@ -60,11 +70,29 @@ int DirectX::drawPixel(int x,int y, DWORD color)
 	DWORD* pBits = (DWORD*)LockRect.pBits;
 	pBits[x + y * (LockRect.Pitch >> 2)] = color;      
 
-	// 解锁
-	pD3DSurface->UnlockRect();
-
-	return 1;
 }
+
+/************************************************************************/
+/* 绘制直线
+ * 隐式方程f(x,y)=(y0-y1)x+(x1-x0)y+x0y1-x1y0=0
+ */
+/************************************************************************/
+void DirectX::drawLine(const Vector2 &v1,const Vector2 &v2,DWORD color)
+{
+	double A = v1.y-v2.y;
+	double B = v2.x-v1.x;
+	double C = v1.x*v2.y-v2.x*v1.y;
+	double x,y=v1.y;
+	for (x=v1.x;x<=v2.x;++x)
+	{
+		drawPixel(x,y,color);
+		if ((A*(x+1)+B*(y+0.5)+C)<0)
+		{
+			++y;
+		}
+	}
+}
+
 
 void DirectX::flipSurface()
 {
@@ -91,6 +119,7 @@ IDirect3DSurface9* DirectX::getSurface()
 {
 	return pD3DSurface;
 }
+
 DirectX::~DirectX()
 {
 	if (pD3DSurface!=NULL)

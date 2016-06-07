@@ -2,15 +2,20 @@
 #include <assert.h>
 #include <iostream>
 #include "DirectXLib.h"
+#include "Math.h"
+#include <WindowsX.h>
+
 using namespace std;
 
 const int WIDTH = 800;
-const int HEIGHT = 800;
+const int HEIGHT = 600;
 DirectX &g_directX = DirectX::instance();
 
 
 LRESULT CALLBACK WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lParam)
 {
+	PAINTSTRUCT ps;
+	HDC hdc;
 	switch (message)
 	{
 	case WM_DESTROY:
@@ -21,7 +26,12 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT message,WPARAM wparam,LPARAM lParam)
 			DestroyWindow(hwnd);
 		}
 		break;
-
+	case WM_PAINT:
+		{
+			hdc = BeginPaint(hwnd, &ps);
+			EndPaint(hwnd, &ps);
+			return 0;
+		} break;
 	default:
 		return DefWindowProc(hwnd,message,wparam,lParam);
 	}
@@ -33,9 +43,16 @@ HWND GameStart(HINSTANCE hInstance,int nShowCmd,string wcName,string title)
 	//1.创建窗口类
 	WNDCLASSEX wndClass = {};
 	wndClass.cbSize = sizeof(WNDCLASSEX);
-	wndClass.lpszClassName = wcName.c_str();
+	wndClass.style = CS_HREDRAW | CS_VREDRAW;
 	wndClass.lpfnWndProc = WndProc;
-	wndClass.hCursor = LoadCursor(NULL,IDC_ARROW);
+	wndClass.cbClsExtra = 0;
+	wndClass.cbWndExtra = 0;
+	wndClass.hInstance = hInstance;
+	wndClass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+	wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+	wndClass.lpszMenuName = NULL;
+	wndClass.lpszClassName = wcName.c_str();
 
 	//2.注册窗口类
 	assert(RegisterClassEx(&wndClass));
@@ -43,8 +60,10 @@ HWND GameStart(HINSTANCE hInstance,int nShowCmd,string wcName,string title)
 	//3.创建窗口
 	HWND hwnd = CreateWindow(wcName.c_str(),title.c_str(),WS_OVERLAPPEDWINDOW,CW_USEDEFAULT,CW_USEDEFAULT,WIDTH,HEIGHT,NULL,NULL,hInstance,NULL);
 
-	//4.移动，显示，更新
-	MoveWindow(hwnd,300,100,WIDTH,HEIGHT,true);
+	//4.调整大小，移动，显示，更新
+	RECT window_rect = {0,0,WIDTH,HEIGHT};
+	AdjustWindowRectEx(&window_rect, GetWindowStyle(hwnd), GetMenu(hwnd) != NULL, GetWindowExStyle(hwnd));
+	MoveWindow(hwnd,300,150,window_rect.right-window_rect.left, window_rect.bottom-window_rect.top,false);
 	ShowWindow(hwnd,nShowCmd);
 	UpdateWindow(hwnd);
 
@@ -56,13 +75,9 @@ HWND GameStart(HINSTANCE hInstance,int nShowCmd,string wcName,string title)
 
 void GameUpdate(HWND hwnd)
 {
-	for (int i=0;i<30;++i)
-	{
-		for (int j=0;j<30;++j)
-		{
-			g_directX.instance().drawPixel(i,j,g_directX.color(0,255,0,0));
-		}
-	}
+	g_directX.lockSurface();
+	g_directX.drawLine(Vector2(100,100),Vector2(400,400),g_directX.ARGB(0,255,0,0));
+	g_directX.unlockSurface();
 	g_directX.flipSurface();
 }
 
@@ -96,7 +111,7 @@ int WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		else
 		{
 			curTime = GetTickCount();
-			if (curTime-preTime>100)
+			if (curTime-preTime>30)
 			{
 				preTime = curTime;
 				GameUpdate(hwnd);
