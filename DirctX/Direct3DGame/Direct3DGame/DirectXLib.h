@@ -3,7 +3,11 @@
 
 #include<d3d9.h>
 #include<d3dx9.h>
+#include <windows.h>
+#include <iostream>
 #include "Math.h"
+
+using namespace std;
 
 class DirectX
 {
@@ -19,13 +23,21 @@ public:
 	void lockSurface();
 	void unlockSurface();
 	//绘制像素到缓冲区
-	void drawPixel(int x,int y,DWORD color);
+	void drawPixel(int x,int y,Color color);
 
 	//缓冲区翻转显示
 	void flipSurface();
 
 	//绘制直线
-	void drawLine(const Vector2 &,const Vector2 &,DWORD color);
+	void drawLine(int ,int ,int ,int,Color  );
+
+	//绘制三角形
+	bool compare(const Vector2 &v1,const Vector2 &v2){return v1.y<v2.y;}
+	void sortTriangleVector2( Vector2 &v1, Vector2 &v2, Vector2 &v3);
+	void drawScanLine( Vector2 &v1, Vector2 &v2);
+	void drawTriangleBottomFlat( Vector2 &v1, Vector2 &v2, Vector2 &v3);
+	void drawTriangleTopFlat( Vector2 &v1, Vector2 &v2, Vector2 &v3);
+	void drawTriangle( Vector2 &v1, Vector2 &v2, Vector2 &v3);
 
 	//获取设备
 	IDirect3DDevice9* getDevice();

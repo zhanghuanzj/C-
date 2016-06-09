@@ -8,7 +8,7 @@
 using namespace std;
 
 const int WIDTH = 800;
-const int HEIGHT = 600;
+const int HEIGHT = 800;
 DirectX &g_directX = DirectX::instance();
 
 
@@ -76,8 +76,37 @@ HWND GameStart(HINSTANCE hInstance,int nShowCmd,string wcName,string title)
 void GameUpdate(HWND hwnd)
 {
 	g_directX.lockSurface();
-	g_directX.drawLine(Vector2(100,100),Vector2(400,400),g_directX.ARGB(0,255,0,0));
+
+	//1.绘制一个像素
+	//g_directX.drawPixel(300,300,Color(0,255,0,0));
+
+	//2.直线光栅化
+	/*g_directX.drawLine(350,350,250,100,Color(0,255,0,0));
+	g_directX.drawLine(200,200,200,500,Color(0,255,0,0));
+	g_directX.drawLine(200,200,500,200,Color(0,255,0,0));
+	g_directX.drawLine(600,250,200,250,Color(0,255,0,0));
+	g_directX.drawLine(679,356,300,300,Color(0,255,0,0));
+	g_directX.drawLine(400,100,450,600,Color(0,255,0,0));
+	g_directX.drawLine(350,350,600,600,Color(0,255,0,0));*/
+	//用直线画圆
+	//for (int i=0;i<750;i+=1)
+	//{
+	//	for (int j=0;j<750;j+=1)
+	//	{
+	//		double v = sqrt(pow(i-350,2)+pow(j-350,2))-200;
+	//		if ( v>=0&&v < 2)
+	//		{
+	//			g_directX.drawLine(350,350,i,j,Color(0,255,0,0));
+	//		}
+	//	}
+	//}
+
+	//3.三角形光栅化
+	g_directX.drawTriangle(Vector2(350,100,Color(0,255,0,0)),
+							Vector2(100,700,Color(0,0,255,0)),
+							Vector2(600,700,Color(0,0,0,255)));
 	g_directX.unlockSurface();
+	//Sleep(1000);
 	g_directX.flipSurface();
 }
 
@@ -92,7 +121,7 @@ int WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 {
 	//1.创建窗口
 	string windowClassName = "MyWindow";
-	string title = "First";
+	string title = "3DRender";
 	HWND hwnd = GameStart(hInstance,nShowCmd,windowClassName,title);
 
 	//时间初始化

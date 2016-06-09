@@ -1,8 +1,4 @@
 #include "DirectXLib.h"
-#include <iostream>
-#include <windows.h>
-#include <sstream>
-using namespace std;
 
 
 bool DirectX::initialDirectX(HINSTANCE hInstance, HWND hWnd, int width, int height)
@@ -61,34 +57,189 @@ void DirectX::unlockSurface()
 	// 解锁
 	pD3DSurface->UnlockRect();
 }
-void DirectX::drawPixel(int x,int y, DWORD color)
+void DirectX::drawPixel(int x,int y, Color color)
 {
 	/* 像素着色
 	Pointer to the locked bits. 
 	If a RECT was provided to the LockRect call, 
 	pBits will be appropriately offset from the start of the surface.*/
 	DWORD* pBits = (DWORD*)LockRect.pBits;
-	pBits[x + y * (LockRect.Pitch >> 2)] = color;      
+	pBits[x + y * (LockRect.Pitch >> 2)] = ARGB( color.a_ , color.r_ , color.g_ , color.b_ );      
 
 }
 
 /************************************************************************/
-/* 绘制直线
+/* 绘制直线(中点法)
  * 隐式方程f(x,y)=(y0-y1)x+(x1-x0)y+x0y1-x1y0=0
  */
 /************************************************************************/
-void DirectX::drawLine(const Vector2 &v1,const Vector2 &v2,DWORD color)
+void DirectX::drawLine(int x1,int y1,int x2,int y2,Color color)
 {
-	double A = v1.y-v2.y;
-	double B = v2.x-v1.x;
-	double C = v1.x*v2.y-v2.x*v1.y;
-	double x,y=v1.y;
-	for (x=v1.x;x<=v2.x;++x)
+	int dx = abs(x2 - x1);
+	int dy = abs(y2 - y1);
+	if (dx>=dy)
 	{
-		drawPixel(x,y,color);
-		if ((A*(x+1)+B*(y+0.5)+C)<0)
+		if (x1>x2)
 		{
-			++y;
+			swap(x1,x2);
+			swap(y1,y2);
+		}
+		double A = y2-y1;
+		double B = x1-x2;
+		double C = x2*y1-x1*y2;
+		int incrementY = (y2>y1)?1:-1;
+		for (int x=x1,y=y1;x<=x2;++x)
+		{
+			drawPixel(x,y,color);
+			double k = A*(x+1)+B*(y+incrementY)+C;
+			if (k*incrementY>=0)
+			{
+				y += incrementY;
+			}
+		}
+	}
+	else
+	{
+		if (y1>y2)
+		{
+			swap(x1,x2);
+			swap(y1,y2);
+		}
+		double A = y2-y1;
+		double B = x1-x2;
+		double C = x2*y1-x1*y2;
+		int incrementX = (x2>x1)?1:-1;
+		for (int x=x1,y=y1;y<=y2;++y)
+		{
+			drawPixel(x,y,color);
+			double k = A*(x+incrementX)+B*(y+1)+C;
+			if (k*incrementX<=0)
+			{
+				x += incrementX;
+			}
+		}
+	}	
+}
+
+/************************************************************************/
+/* 对三角形顶点以y从小到大排序                                            */
+/************************************************************************/
+void DirectX::sortTriangleVector2( Vector2 &v1, Vector2 &v2, Vector2 &v3)
+{
+	if (v1.y>v2.y)
+	{
+		swap(v1,v2);
+	}
+	if (v3.y<v1.y)
+	{
+		swap(v1,v3);
+		swap(v2,v3);
+	}
+	else if(v3.y<v2.y)
+	{
+		swap(v2,v3);
+	}
+}
+
+/************************************************************************/
+/* 绘制插值（颜色变化）直线                                               */
+/************************************************************************/
+void DirectX::drawScanLine( Vector2 &v1, Vector2 &v2)
+{
+	if (v1.x>v2.x)
+	{
+		swap(v1,v2);
+	}
+	int x_end = v2.x;
+	Color color = v1.color;
+	Color d_color = v2.color-v1.color;
+	for (int x=v1.x;x<=x_end;++x)
+	{
+		drawPixel(x,v1.y,color);
+		color = v1.color + d_color*(x-v1.x)/(v2.x-v1.x); 
+	}
+}
+/************************************************************************/
+/* 绘制底平三角形	 v1为上顶点												*/
+/************************************************************************/
+void DirectX::drawTriangleBottomFlat( Vector2 &v1, Vector2 &v2, Vector2 &v3)
+{
+	int startY = v1.y;
+	int endY = v2.y;
+	double LX = v1.x,RX = v1.x;
+	double ldx = (v2.x - v1.x) / (v2.y - v1.y);
+	double rdx = (v3.x - v1.x) / (v3.y - v1.y);
+	Color d_left_color = v2.color-v1.color;
+	Color d_right_color = v3.color-v1.color;
+	for (;startY<=endY;++startY)
+	{
+		double factor = (startY-v1.y)/(endY-v1.y);
+		Color  co = d_left_color*factor;
+		Color left_color = v1.color + d_left_color*factor;
+		Color right_color = v1.color + d_right_color*factor;
+		drawScanLine(Vector2(LX,startY,left_color),Vector2(RX,startY,right_color));
+		//drawScanLine(Vector2(LX,startY,Color(0,0,255,0)),Vector2(RX,startY,Color(0,0,0,0)));
+		LX += ldx;
+		RX += rdx;
+	}
+}
+
+/************************************************************************/
+/* 绘制顶平三角形		v3为底顶点											*/
+/************************************************************************/
+void DirectX::drawTriangleTopFlat(Vector2 &v1, Vector2 &v2, Vector2 &v3)
+{
+	int startY = v3.y;
+	int endY = v2.y;
+	double LX = v3.x,RX = v3.x;
+	double ldx = ((double)(v3.x - v1.x)) / (v3.y - v1.y);
+	double rdx = ((double)(v3.x - v2.x)) / (v3.y - v2.y);
+	for (;startY>=endY;--startY)
+	{
+		double factor = (v3.y-startY)/(v3.y-endY);
+		Color left_color = v3.color + (v1.color-v3.color)*factor;
+		Color right_color = v3.color + (v2.color-v3.color)*factor;
+		drawScanLine(Vector2(LX,startY,left_color),Vector2(RX,startY,right_color));
+		LX -= ldx;
+		RX -= rdx;
+	}
+}
+
+void DirectX::drawTriangle( Vector2 &v1, Vector2 &v2, Vector2 &v3)
+{
+	sortTriangleVector2(v1,v2,v3);
+	if (v1==v2&&v2==v3)
+	{
+		drawPixel(v1.x,v2.x,v1.color);
+	}
+	else if (v1==v2)
+	{
+		drawLine(v1.x,v1.y,v3.x,v3.y,v1.color);
+	}
+	else if(v1==v3)
+	{
+		 drawLine(v1.x,v1.y,v2.x,v2.y,v1.color);
+	}
+	else if (v2==v3)
+	{
+		drawLine(v1.x,v1.y,v3.x,v3.y,v1.color);
+	}
+	else
+	{
+		if (v1.y==v2.y)
+		{
+			drawTriangleTopFlat(v1,v2,v3);
+		}
+		else if (v2.y==v3.y)
+		{
+			drawTriangleBottomFlat(v1,v2,v3);
+		}
+		else
+		{
+			Color color = v3.color + (v1.color-v3.color)*(v2.y-v3.y)/(v1.y-v3.y);
+			Vector2 v4(v1.x+(double(v2.y-v1.y)/(v3.y-v1.y))*(v3.x-v1.x),v2.y,color);
+			drawTriangleBottomFlat(v1,v2,v4);
+			drawTriangleTopFlat(v2,v4,v3);
 		}
 	}
 }
