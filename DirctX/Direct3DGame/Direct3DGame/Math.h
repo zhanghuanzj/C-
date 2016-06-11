@@ -1,5 +1,6 @@
 #ifndef MATH_H_
 #define MATH_H_
+#include <math.h>
 
 class Color
 {
@@ -59,6 +60,8 @@ inline Color operator-(const Color &color1,const Color &color2)
 				 color1.g_ - color2.g_,
 				 color1.b_ - color2.b_);
 }
+
+
 class Vector2
 {
 public:
@@ -69,5 +72,9 @@ public:
 	double x;
 	double y;
 };
+
+float Sin(float degree);
+float Cos(float degree);
+float Tan(float defree);
 
 #endif
