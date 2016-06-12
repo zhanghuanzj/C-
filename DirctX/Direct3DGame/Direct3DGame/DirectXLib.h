@@ -6,8 +6,11 @@
 #include <windows.h>
 #include <iostream>
 #include "Math.h"
+#include "Camera.h"
+#include "Model.h"
 
 using namespace std;
+
 
 class DirectX
 {
@@ -20,6 +23,7 @@ public:
 	}
 	//初始化DirectX
 	bool initialDirectX(HINSTANCE hInstance, HWND hWnd, int width, int height);
+	void fillSurface();
 	void lockSurface();
 	void unlockSurface();
 	//绘制像素到缓冲区
@@ -39,6 +43,8 @@ public:
 	void drawTriangleTopFlat( Vector2 &v1, Vector2 &v2, Vector2 &v3);
 	void drawTriangle( Vector2 &v1, Vector2 &v2, Vector2 &v3);
 
+	//绘制线框模型
+	void draw_wireframe_model(Model& model);
 	//获取设备
 	IDirect3DDevice9* getDevice();
 
@@ -50,9 +56,12 @@ public:
 	~DirectX();
 	D3DLOCKED_RECT LockRect;
 private:
-	DirectX():pD3DXDevice(nullptr),pD3DSurface(nullptr){}
+	DirectX():pD3DXDevice(nullptr),pD3DSurface(nullptr),camera(Camera::instance()){}
 	IDirect3DDevice9* pD3DXDevice;
 	IDirect3DSurface9* pD3DSurface;
+	Camera &camera;
+	int width_;
+	int height_;
 	 
 
 };

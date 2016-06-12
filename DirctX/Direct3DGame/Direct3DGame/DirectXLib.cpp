@@ -42,7 +42,17 @@ bool DirectX::initialDirectX(HINSTANCE hInstance, HWND hWnd, int width, int heig
 
 	pD3DXDevice->CreateOffscreenPlainSurface(width, height, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &pD3DSurface, 0);
 	
+
+	//±£´æÆÁÄ»¿í£¬¸ß
+	width_ = width;
+	height_ = height;
+
 	return true;
+}
+
+void DirectX::fillSurface()
+{
+	pD3DXDevice->ColorFill(pD3DSurface,NULL,D3DCOLOR_XRGB(0,0,0));
 }
 void DirectX::lockSurface()
 {
@@ -50,6 +60,7 @@ void DirectX::lockSurface()
 	memset(&LockRect, 0, sizeof(LockRect));
 	// Ëø¶¨
 	pD3DSurface->LockRect(&LockRect,NULL,D3DLOCK_DISCARD);
+
 }
 
 void DirectX::unlockSurface()
@@ -244,6 +255,17 @@ void DirectX::drawTriangle( Vector2 &v1, Vector2 &v2, Vector2 &v3)
 	}
 }
 
+void DirectX::draw_wireframe_model(Model& model)
+{
+
+
+	for (auto v :model.poly_indices_)
+	{
+		drawLine(model.trans_vertexes_[v.indices[0]].x_,model.trans_vertexes_[v.indices[0]].y_,model.trans_vertexes_[v.indices[1]].x_,model.trans_vertexes_[v.indices[1]].y_,Color(0,255,0,0));
+		drawLine(model.trans_vertexes_[v.indices[2]].x_,model.trans_vertexes_[v.indices[2]].y_,model.trans_vertexes_[v.indices[1]].x_,model.trans_vertexes_[v.indices[1]].y_,Color(0,255,0,0));
+		drawLine(model.trans_vertexes_[v.indices[0]].x_,model.trans_vertexes_[v.indices[0]].y_,model.trans_vertexes_[v.indices[2]].x_,model.trans_vertexes_[v.indices[2]].y_,Color(0,255,0,0));
+	}
+}
 
 void DirectX::flipSurface()
 {

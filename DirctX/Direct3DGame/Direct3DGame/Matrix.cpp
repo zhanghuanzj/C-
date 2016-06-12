@@ -49,7 +49,7 @@ void Matrix::setRotate(int axis,float theta)
 	tx = ty = tz =0;
 }
 
-void	Matrix::setRotate(const Vector3 &axis, float theta) {
+void Matrix::setRotate(const Vector3 &axis, float theta) {
 
 	// Quick sanity check to make sure they passed in a unit vector
 	// to specify the axis
