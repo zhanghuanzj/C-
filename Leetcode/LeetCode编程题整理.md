@@ -28,6 +28,16 @@
 	        return min(left,right)+1;
 	    }
 	};
+
+二叉树的最大深度
+
+	class Solution {
+	public:
+	    int maxDepth(TreeNode *root) {
+	        if(root==nullptr) return 0;
+	        return max(maxDepth(root->left),maxDepth(root->right))+1;
+	    }
+	};
 ## 2.Evaluate reverse polish notation ##
 逆波兰表达式求值
 
@@ -182,6 +192,41 @@ Sort a linked list in O(n log n) time using constant space complexity.
 	            }
 	            if(node->left){
 	                record.push(node->left);
+	            }
+	        }
+	        return result;
+	    }
+	};
+**Binary tree inorder traversal**
+
+	class Solution {
+	public:
+	    vector<int> inorderTraversal(TreeNode *root) {
+	        vector<int> result;
+	        if(root==nullptr) return result;
+	        stack<TreeNode*> s1;
+	        stack<TreeNode*> s2;
+	        s1.push(root);
+	        while(!s1.empty()||!s2.empty()){
+	            if(!s1.empty()){
+	                TreeNode* node = s1.top();
+	                s1.pop();
+	                if(node->left){
+	                    s2.push(node);
+	                    s1.push(node->left);
+	                }else{
+	                    result.push_back(node->val);
+	                    if(node->right){
+	                        s1.push(node->right);
+	                    }
+	                }
+	            }else if(!s2.empty()){
+	                TreeNode *node = s2.top();
+	                s2.pop();
+	                result.push_back(node->val);
+	                if(node->right){
+	                    s1.push(node->right);
+	                }
 	            }
 	        }
 	        return result;
@@ -661,6 +706,7 @@ Nodes are labeled uniquely.
 	        return count==1;
 	    }
 	};
+层次遍历原理类似
 ## 26.Word Ladder II ##
 **Example:**
 
@@ -1007,6 +1053,756 @@ dp[i][j]:表示长为i的S与长为j的T所表示的最多子序列
 	private:
 	    ListNode *list;
 	};
+Convert sorted array to binary search tree 类似
+## 36.construct binary tree from inorder and postorder traversal ##
+	class Solution {
+	public:
+	    TreeNode *buildTree(vector<int> &inorder, vector<int> &postorder) {
+	        return solve(inorder,0,inorder.size()-1,postorder,0,postorder.size()-1);
+	    }
+	    TreeNode *solve(vector<int> &inorder,int il,int ir,vector<int> &postorder,int pl,int pr){
+	        if(il>ir) return nullptr;
+	        int v = postorder[pr];
+	        int index = il;
+	        while(inorder[index]!=v)
+	            ++index;
+	        int offset = index-il;
+	        TreeNode *node = new TreeNode(v);
+	        node->left = solve(inorder,il,index-1,postorder,pl,pl+offset-1);
+	        node->right = solve(inorder,index+1,ir,postorder,pl+offset,pr-1);
+	        return node;
+	    }
+	};
+## 37.Symmetric Tree ##
+	    1
+	   / \
+	  2   2
+	 / \ / \
+	3  4 4  3
+	
+	But the following is not:
+	    1
+	   / \
+	  2   2
+	   \   \
+	   3    3
+**Code:**
+
+	class Solution {
+	public:
+	    bool isSymmetric(TreeNode *root) {
+	        if(root==nullptr) return true;
+	        return solve(root->left,root->right);
+	    }
+	    bool solve(TreeNode *left,TreeNode *right){
+	        if(left==nullptr && right==nullptr) return true;
+	        if(left==nullptr || right==nullptr) return false;
+	        if(left->val != right->val) return false;
+	        return solve(left->left,right->right)&&solve(left->right,right->left);
+	    }
+	};
+判断两棵树是否相同类似
+## 38.Recover Binary Search Tree ##
+BST中两个节点发生了交换
+
+	class Solution {
+	public:
+		void recoverTree(TreeNode *root) {
+			if(root==nullptr) return;
+			vector<TreeNode*> record;
+			TreeNode* pre = nullptr;
+			solve(pre,root,record);
+			swap(record[0]->val,record[1]->val);
+		}
+		void solve(TreeNode *&pre,TreeNode *root,vector<TreeNode*> &record){
+			if(root==nullptr) return;
+			solve(pre,root->left,record);
+			check(pre,root,record);
+			pre = root;
+			solve(pre,root->right,record);
+		}
+		void check(TreeNode *pre,TreeNode *root,vector<TreeNode*> &record){
+			if(pre==nullptr) return;
+			if(pre->val>root->val){
+				if(record.empty()){
+					record.push_back(pre);
+					record.push_back(root);
+				}else{
+					record[1] = root;
+				}
+			}
+		}
+	};
+
+## 39.Validate Binary Search Tree ##
+判断是否为BST
+
+	class Solution {
+	public:
+	    bool isValidBST(TreeNode *root) {
+	        TreeNode* pre = nullptr;
+	        return solve(pre,root);
+	    }
+	    bool solve(TreeNode *&pre,TreeNode *root){
+	        if(root==nullptr) return true;
+	        bool result = solve(pre,root->left);
+	        if(pre!=nullptr && pre->val >= root->val) 
+	            return false;
+	        pre = root;
+	        return result && solve(pre,root->right);  
+	    }
+	};
+## 40.Interleaving String ##
+s1, s2, s3, find whether s3 is formed by the interleaving of s1 and s2.
+
+	s1 ="aabcc",
+	s2 ="dbbca",
+	When s3 ="aadbbcbcac", return true.
+	When s3 ="aadbbbaccc", return false.
+**Code:**
+
+	class Solution {
+	public:
+	    bool isInterleave(string s1, string s2, string s3) {
+	        if(s1.size()+s2.size()!=s3.size()) return false;
+	        vector<vector<bool>> dp(s1.size()+1,vector<bool>(s2.size()+1,false));
+	        dp[0][0] = true;  //dp[i][j]:表示s1和s2能否组成长为i+j的s3
+	        for(int i=0;i<=s1.size();++i){
+	            for(int j=0;j<=s2.size();++j){
+	                if(i>0 && s1[i-1]==s3[i+j-1]){
+	                    dp[i][j] = dp[i-1][j];
+	                }
+	                if(j>0 && s2[j-1]==s3[i+j-1]){
+	                    dp[i][j] = dp[i][j]|dp[i][j-1];
+	                }
+	            }
+	        }
+	        return dp[s1.size()][s2.size()];
+	    }
+	};
+## 41.Unique Binary Search Trees ##
+Given n = 3, there are a total of 5 unique BST's.
+
+	   1         3     3      2      1
+	    \       /     /      / \      \
+	     3     2     1      1   3      2
+	    /     /       \                 \
+	   2     1         2                 3
+**Code:**
+
+	class Solution {
+	public:
+		int numTrees(int n) {
+			if(n<=0) return 0;
+			vector<int> dp(n+1,0);
+			dp[0]=dp[1] = 1;
+			for(int i=2;i<=n;++i){
+				for(int j=1;j<=i;++j){
+					dp[i] += dp[j-1]*dp[i-j];
+				}
+			}
+			return dp.back();
+		}
+	};
+
+创建所有的BST
+
+	class Solution {
+	public:
+	    vector<TreeNode *> generateTrees(int n) {
+	        return solve(1,n);
+	    }
+	    vector<TreeNode*> solve(int left,int right){
+	        vector<TreeNode*> result;
+	        if(left>right){
+	            result.push_back(nullptr);
+	        }else if(left==right) {
+	            result.push_back(new TreeNode(left));
+	        }else {
+	            for(int i=left;i<=right;++i){
+	            	vector<TreeNode*> leftTree = solve(left,i-1);
+	                vector<TreeNode*> rightTree = solve(i+1,right);
+	                for(int x=0;x<leftTree.size();++x){
+	                    for(int y=0;y<rightTree.size();++y){
+	                        TreeNode *node = new TreeNode(i);
+	                        node->left = leftTree[x];
+	                        node->right = rightTree[y];
+	                        result.push_back(node);
+	                    }
+	                }
+	       		}
+	        }
+	        return result;
+	    }   
+	};
+## 42.Restore IP Addresses ##
+
+	Given"25525511135",
+	return["255.255.11.135", "255.255.111.35"]
+**Code:**
+
+	class Solution {
+	public:
+		vector<string> restoreIpAddresses(string s) {
+			vector<string> result;
+			solve(s,0,1,"",result);
+			return result;
+		}
+		void solve(const string &s,int index,int depth,string ip,vector<string> &result){
+			if(depth==4){
+				if (s.size()-index<=3){
+					string sub = s.substr(index);
+					if (sub[0]=='0'&&sub.size()>1) return;//只能是0，不能是"00","01"这种
+					if (stoi(sub)<256) result.push_back(ip+sub);
+				}
+			}
+			else{
+				for (int i=1;i<=3&&index+i<s.size();++i){
+					string sub = s.substr(index,i);
+					if (sub[0]=='0'&&sub.size()>1) break; //只能是0，不能是"00","01"这种
+					if (stoi(sub)<256) solve(s,index+i,depth+1,ip+sub+".",result);
+				}
+			}
+		}
+	};
+## 43.Reverse Linked List ##
+Given1->2->3->4->5->NULL, m = 2 and n = 4,
+return1->4->3->2->5->NULL.
+
+	class Solution {
+	public:
+	    ListNode *reverseBetween(ListNode *head, int m, int n) {
+	        ListNode preHead(0);
+			preHead.next = head;
+			head = &preHead;
+			ListNode *pre=nullptr,*post=nullptr;
+			for (int i=1;i<=n;++i){
+				if (i==m) pre = head;
+				if (i==n) post = head->next;
+				head = head->next;
+			}
+	        while (pre->next!=post){ //区域内还有节点要往post后面插入
+				ListNode *p = pre->next; //需要转移的节点
+				pre->next = p->next;
+				p->next = post->next;
+				post->next = p;
+			}
+			return preHead.next;
+	    }
+	};
+
+## 44.Subsets ##
+
+	If S =[1,2,2], a solution is:
+	[
+	  [2],
+	  [1],
+	  [1,2,2],
+	  [2,2],
+	  [1,2],
+	  []
+	]
+**Code:**
+
+	class Solution {
+	public:
+	    vector<vector<int> > subsetsWithDup(vector<int> &S) {
+	        sort(S.begin(),S.end());
+	        vector<vector<int>> result;
+	        result.push_back(vector<int>());
+	        int pre;
+	        for(int i=0;i<S.size();++i){
+	            if(i==0){
+	                result.push_back(vector<int>(1,S[i]));
+	            }else{
+	                int size = result.size();
+	                for(int j=0;j<size;++j){
+	                    if((pre==S[i]&&check(S,i,result[j]))||pre!=S[i]){
+	                        vector<int> temp = result[j];
+	                        temp.push_back(S[i]);
+	                        result.push_back(temp);
+	                    }
+	                }
+	            }
+	            pre = S[i];
+	        }
+	        return result;
+	    }
+	private:
+	    bool check(const vector<int> &S,const int index,const vector<int> &V){ //判断在数字重复时是否可以插入
+	        int count = 0;
+	        int i = index-1;
+	        while(i>=0&&S[i]==S[index]){  	//重复出现的个数
+	            --i;
+	            ++count;
+	        }
+	        for(int j=V.size()-1;j>=0;--j){	//相应子序列出现重复的个数抵消
+	            if(V[j]==S[index]){
+	                --count;
+	            }
+	        }
+	        return count==0;	//相同的个数表示可以插入
+	    }
+	};
+若取数组（没有重复元素）的所有子集，可以用累插法或位取法。
+## 45.Decode Ways ##
+	'A' -> 1
+	'B' -> 2
+	...
+	'Z' -> 26
+求数字字符串可以拆分的组合数，如“12”，return 2
+
+	class Solution {
+	public:
+		int numDecodings(string s) {
+			if (s.empty()||s[0]=='0') return 0;
+			vector<int> dp(s.size()+1,0);
+			dp[0] = dp[1] = 1;
+			for (int i=2;i<=s.size();++i){
+				int pre = s[i-2]-'0';
+				int cur = s[i-1]-'0';
+	            if (cur==0){ 	//10,20，必须组合		
+					if ((pre==1||pre==2))//否则为0
+						dp[i] = dp[i-2];
+				}else{
+					if (pre==1||(pre==2&&cur<=6)) //1X,2X，可分可组
+						dp[i] = dp[i-1]+dp[i-2];
+	                else  //X 必须分开
+	                   dp[i] = dp[i-1]; 
+				}
+			}
+			return dp[s.size()];
+		}
+	};
+
+## 46.Gray Code ##
+	For example, given n = 2, return[0,1,3,2]. Its gray code sequence is:
+	00 - 0
+	01 - 1
+	11 - 3
+	10 - 2
+**Code:**
+
+	class Solution {
+	public:
+		vector<int> grayCode(int n) {
+			vector<int> result(pow(2,n));
+			for (int i=1;i<=n;++i){
+				int size = 1<<i;
+				int flag = 1<<(i-1);
+				int index = 0;
+				for (int j=size-1;2*j>=size;--j){
+					result[j] = result[index++]|flag;  //左部插入1
+				}
+			}
+			return result;
+		}
+	};
+## 47.Merge Sorted Array ##
+将两个有序数组A,B归并到A,从尾部比较，并从A的尾部插入即可。
+## 48.Scramble String ##
+Given a string s1, we may represent it as a binary tree by partitioning it to two non-empty substrings recursively.
+Below is one possible representation of s1 ="great":
+
+	    great
+	   /    \
+	  gr    eat
+	 / \    /  \
+	g   r  e   at
+	           / \
+	          a   t
+To scramble the string, we may choose any non-leaf node and swap its two children.
+For example, if we choose the node"gr"and swap its two children, it produces a scrambled string"rgeat".
+
+	    rgeat
+	   /    \
+	  rg    eat
+	 / \    /  \
+	r   g  e   at
+	           / \
+	          a   t
+We say that"rgeat"is a scrambled string of"great".
+Similarly, if we continue to swap the children of nodes"eat"and"at", it produces a scrambled string"rgtae".
+
+	    rgtae
+	   /    \
+	  rg    tae
+	 / \    /  \
+	r   g  ta  e
+	       / \
+	      t   a
+We say that"rgtae"is a scrambled string of"great".
+Given two strings s1 and s2 of the same length, determine if s2 is a scrambled string of s1.
+
+	 class Solution {
+	 public:
+		 bool isScramble(string s1, string s2) {
+			 if(s1.size()!=s2.size()) return false;
+			 if(s1==s2 ) return true;
+			 vector<int> record(26,0);
+			 for (int i=0;i<s1.size();++i){
+				 record[s1[i]-'a'] ++;
+				 record[s2[i]-'a'] --;
+			 }
+			 for (auto n : record){
+				 if (n!=0)
+					 return false;
+			 }
+			 for (int mid=1;mid<s1.size();++mid){
+				 if (isScramble(s1.substr(0,mid),s2.substr(0,mid))&&isScramble(s1.substr(mid),s2.substr(mid))||
+					 isScramble(s1.substr(0,mid),s2.substr(s2.size()-mid))&&isScramble(s1.substr(mid),s2.substr(0,s2.size()-mid))){
+					 return true;
+				 }
+			 }
+			 return false;
+		 }
+	 };
+## 49.Partition List ##
+将小于X的节点放在大于X的节点的前面
+Given1->4->3->2->5->2and x = 3,
+return1->2->2->4->3->5.
+
+	class Solution {
+	public:
+	    ListNode *partition(ListNode *head, int x) {
+	        ListNode lessHead(0);
+	        ListNode greatHead(0);
+	        ListNode *less = &lessHead,*great = &greatHead;
+	        while(head){
+	            ListNode *temp = head;
+	            head = head->next;
+	            if(temp->val < x){
+	                less->next = temp;
+	                less = less->next;
+	            }else{
+	                great->next = temp;
+	                great = great->next;
+	            }
+	        }
+	        great->next = nullptr;
+	        less->next = greatHead.next;
+	        return lessHead.next;
+	    }
+	};
+## 50.Maximal Rectangle ##
+
+	 class Solution {
+	 public:
+	     int maximalRectangle(vector<vector<char> > &matrix) {
+	         if(matrix.empty()) return 0;
+	         int m = matrix.size();
+	         int n = matrix.front().size();
+	         int result = 0;
+	         vector<int> height(n,0);
+	         for(int i=0;i<m;++i){
+	             for(int j=0;j<n;++j){
+	                 if(matrix[i][j]=='0'){
+	                     height[j] = 0;
+	                 }else{
+	                     height[j]++;
+	                 }
+	             }
+	             result = max(result,solve(height));
+	         }
+	         return result;
+	     } 
+	     int solve(vector<int> &height){    //求直方图围成的最大矩阵
+	         int result = 0;
+	         stack<int> s;
+	         for(auto v : height){
+	             int count = 1;
+	             while(!s.empty() && s.top()>v){ //比之前的小
+	                 result = max(result,s.top()*count);
+	                 ++count;
+	                 s.pop();
+	             }
+	             for(int i=0;i<count;++i)
+	                 s.push(v); 
+	         }
+	         int count = 1;
+	         while (!s.empty()){
+	             result = max(result,s.top()*count);
+	             ++count;
+	             s.pop();
+	         }
+	         return result;
+	     }
+	 };
+## 51.Remove Duplicates From Sorted List ##
+删除重复的元素，重复的只留一个（pre,cur）
+删除重复的元素，重复的一个都不留,先添加一个无关头结点(bef,pre,cur)
+## 52.Search in Rotated Sorted Array ##
+带重复的
+
+	 class Solution {
+	 public:
+		 bool search(int A[], int n, int target) {
+			 int left = 0,right = n-1;
+			 while(left<=right){
+				 while(left<right&&A[left]==A[left+1]) ++left;
+				 while(left<right&&A[right]==A[right-1]) --right;
+				 int mid = (left+right)/2;
+				 if(A[mid]==target) return true;
+	             if(A[mid]<A[right]){     //右有序
+					 if(A[mid]<target&&target<=A[right]) left = mid+1;
+					 else right = mid-1;
+	             }else {                   //左有序
+					 if(A[mid]>target&&target>=A[left]) right = mid-1;
+					 else left = mid+1;
+				 }
+			 }
+			 return false;
+		 }
+	 };
+## 53.Word Search ##
+
+	Given board =
+	[
+	  ["ABCE"],
+	  ["SFCS"],
+	  ["ADEE"]
+	]
+	word ="ABCCED", -> return strue,
+	word ="SEE", -> returns true,
+	word ="ABCB", -> returns false.
+dfs加回溯
+## 54.Combinations ##
+从1到n的数字中取k个数的所有取法。
+
+	n = 4 and k = 2, a solution is:
+	[
+	  [2,4],
+	  [3,4],
+	  [2,3],
+	  [1,2],
+	  [1,3],
+	  [1,4],
+	]
+Code：
+
+	 class Solution {
+	 public:
+		 vector<vector<int>> combine(int n, int k) {
+			 vector<int> path;
+			 vector<vector<int>> result;
+			 solve(1,n,k,result,path);
+			 return result;
+		 }
+		 void solve(int left,int right,int k,vector<vector<int>> &result,vector<int>&path){
+			 if(right-left+1<k) return;  //无法满足
+			 if (k==0){
+				 result.push_back(path);
+			 }else if(right-left+1==k){
+				 for(int i=left;i<=right;++i){
+					 path.push_back(i);
+				 }
+				 result.push_back(path);
+				 for(int i=left;i<=right;++i){
+					 path.pop_back();
+				 }
+			 }else{
+				 for(int i=left;i<=right-k+1;++i){
+					 path.push_back(i);
+					 solve(i+1,right,k-1,result,path);
+					 path.pop_back();
+				 }
+			 }
+		 }
+	 };
+## 55.Minimum Window Substring ##
+求S中包含T所有字符的最小窗口
+
+	S ="ADOBECODEBANC"
+	T ="ABC"
+	Minimum window is"BANC".
+尺取法
+Code：
+
+	 class Solution {
+	 public:
+		 string minWindow(string S, string T) {
+			 string result;
+			 map<char,int> TM,SM;
+			 for (auto c : T) TM[c]++;
+			 int count = 0,left = 0;
+			 for (int right=0;right<S.size();++right){
+				 if (TM[S[right]]!=0){
+					 SM[S[right]]++;
+					 if (SM[S[right]]<=TM[S[right]]) ++count;
+					 while (count==T.size()){
+						 if(result.empty()||result.size()>right-left+1){
+							 result = S.substr(left,right-left+1);
+						 }
+						 if (TM[S[left]]){
+							 SM[S[left]]--;
+							 if (SM[S[left]]<TM[S[left]]) count--;				 
+						 }
+						 ++left;
+					 }
+				 }
+			 }
+			 return result;
+		 }
+	 };
+## 56.Search a 2d Matrix ##
+
+	class Solution {
+	public:
+	    bool searchMatrix(vector<vector<int>> &matrix, int target) {
+	        if(matrix.empty()) return false;
+	        int m = 0;
+	        int n = matrix.front().size()-1;
+	        while(m<matrix.size()&&n>=0){
+	            if(matrix[m][n]==target){
+	                return true;
+	            }else if(matrix[m][n]>target){  //往左走
+	                --n;
+	            }else{		//往下走
+	                ++m;
+	            }
+	        }
+	        return false;
+	    }
+	};
+## 57.Set Matrix Zeroes ##
+若一个元素为0，则所在行和列都置为0
+
+	 class Solution {
+	 public:
+		 void setZeroes(vector<vector<int> > &matrix) {
+			 if(matrix.empty()) return;
+			 int m = matrix.size();
+			 int n = matrix.front().size();
+			 bool right = false,down = false;
+			 for(int i=0;i<m;++i){
+				 for(int j=0;j<n;++j){
+					 if(matrix[i][j]==0){
+						 if (j==0) down = true;
+						 if (i==0) right = true;
+						 matrix[i][0] = 0;
+						 matrix[0][j] = 0;
+					 }
+				 }
+			 }
+			 for(int i=1;i<m;++i){
+				 if(matrix[i][0]==0){
+					 fill_n(matrix[i].begin(),n,0);
+				 }
+			 }
+			 for(int i=1;i<n;++i){
+				 if(matrix[0][i]==0){
+					 for (int j=1;j<m;++j)
+						matrix[j][i] = 0;
+				 }
+			 }
+	         //第一行第一列特殊处理
+			 if (right) fill_n(matrix[0].begin(),n,0);
+			 if(down) {
+				 for (int j=1;j<m;++j)
+					 matrix[j][0] = 0;
+			 }
+		 }
+	 };
+## 58.Edit Distance ##
+Given two words word1 and word2, find the minimum number of steps required to convert word1 to word2. (each operation is counted as 1 step.)
+You have the following 3 operations permitted on a word:
+a) Insert a character
+b) Delete a character
+c) Replace a character
+
+	class Solution {
+	public:
+	    int minDistance(string word1, string word2) {
+	        int m = word1.size(),n = word2.size();
+	        vector<vector<int>> dp(m+1,vector<int>(n+1,0));
+	        for(int i=0;i<=n;++i)
+	            dp[0][i] = i;
+	        for(int i=0;i<=m;++i)
+	            dp[i][0] = i;
+	        for(int i=1;i<=m;++i){
+	            for(int j=1;j<=n;++j){
+	                if(word1[i-1]==word2[j-1]){
+	                    dp[i][j] = dp[i-1][j-1];
+	                }else{
+	                    dp[i][j] = min(min(dp[i-1][j],dp[i][j-1]),dp[i-1][j-1])+1;
+	                }
+	            }
+	        }
+	        return dp[m][n];
+	    }
+	};
+## 59.Simplify Path ##
+path ="/home/", =>"/home"
+path ="/a/./b/../../c/", =>"/c"
+
+	 class Solution {
+	 public:
+		 string simplifyPath(string path) {
+			 vector<string> str = split(path,'/');
+			 stack<string> s;
+			 for (int i=0;i<str.size();++i){
+				 if (str[i].empty()||str[i]==".") continue;
+				 else if (str[i]==".."){
+					 if (!s.empty()){
+						 s.pop();
+					 }
+				 }else{
+					 s.push(str[i]);
+				 }
+			 }
+			 string result;
+			 while (!s.empty()){
+				 result = "/"+s.top()+result;
+				 s.pop();
+			 }
+			 return result.empty()?"/":result;
+		 }
+		 vector<string> split(string s,char c)
+		 {
+			 vector<string> str;
+			 s = s+"//";
+			 int pre = 0;
+			 for (int i=0;i<s.size();++i){
+				 if (s[i]=='/'){
+					 str.push_back(s.substr(pre,i-pre));
+					 pre = i+1;
+				 }
+			 }
+			 return str;
+		 }
+	 };
+## 60.Climbling Stairs ##
+	class Solution {
+	public:
+	    int climbStairs(int n) {
+	        if(n<1) return 0;
+	        if(n==1||n==2) return n;
+	        int x = 1,y = 2;
+	        int result = 0;
+	        for(int i=3;i<=n;++i){
+	            result = x+y;
+	            x = y;
+	            y = result;
+	        }
+	        return result;
+	    }
+	};
+## 61.Sqrtx ##
+牛顿迭代法
+
+	 class Solution {
+	 public:
+		 int sqrt(int x) {
+			 if(x==0) return 0;
+			 double x0=x,x1;
+			 do 
+			 {
+				 x1 = x0;
+				 x0 = (x/x0+x0)/2;
+			 } while (abs(x0-x1)>0.1);
+			 return x0;
+		 }
+	 };
 ## wildcard-matching ##
 Implement wildcard pattern matching with support for'?'and'*'.   
 
