@@ -1554,6 +1554,29 @@ return1->2->2->4->3->5.
 			 return false;
 		 }
 	 };
+无重复
+
+	 class Solution {
+	 public:
+		 int search(int A[], int n, int target) {
+			 int left = 0,right = n-1;
+			 while(left<=right){
+				 int mid = (left+right)/2;
+				 if(A[mid]==target) return mid;
+				 if(A[mid]<A[right])     //右有序
+				 {
+					 if(A[mid]<target&&target<=A[right]) left = mid+1;
+					 else right = mid-1;
+				 }
+				 else                    //左有序
+				 {
+					 if(A[mid]>target&&target>=A[left]) right = mid-1;
+					 else left = mid+1;
+				 }
+			 }
+			 return -1;
+		 }
+	 };
 ## 53.Word Search ##
 
 	Given board =
@@ -1803,7 +1826,612 @@ path ="/a/./b/../../c/", =>"/c"
 			 return x0;
 		 }
 	 };
-## wildcard-matching ##
+## 62.Valid Number ##
+	"0"=>true
+	" 0.1 "=>true
+	"abc"=>false
+	"1 a"=>false
+	"2e10"=>true
+**Code:**
+
+	 class Solution {
+	 public:
+		 bool isNumber(const char *s) {
+			 enum InputType{
+				 INVALID,SPACE,SIGN,DOT,E,DIGIT
+			 };
+			 int trans[9][6] = {
+				 {-1,0,2,3,-1,1},
+				 {-1,8,-1,4,5,1},
+				 {-1,-1,-1,3,-1,1},
+				 {-1,-1,-1,-1,-1,4},
+				 {-1,8,-1,-1,5,4},
+				 {-1,-1,6,-1,-1,7},
+				 {-1,-1,-1,-1,-1,7},
+				 {-1,8,-1,-1,-1,7},
+				 {-1,8,-1,-1,-1,-1},
+			 };
+			 int state = 0;
+			 int input = INVALID;
+			 while(*s!='\0'){
+				 if (isspace(*s)){
+					 input = SPACE;
+				 }else if (*s=='+'||*s=='-'){
+					 input = SIGN;
+				 }else if(*s=='.'){
+					 input = DOT;
+				 }else if(*s=='e'){
+					 input = E;
+				 }else if(isdigit(*s)){
+					 input = DIGIT;
+				 }else{
+					 input = INVALID;
+				 }
+				 state = trans[state][input];
+				 if (state==-1){
+					 return false;
+				 }
+	             ++s;
+			 }
+			 return state==1||state==4||state==7||state==8;
+		 }
+	 };
+## 63.Add Binary ##
+	a ="11"
+	b ="1"
+	Return"100".
+
+**Code:**
+
+	class Solution {
+	public:
+		string addBinary(string a, string b) {
+			int aIndex = a.size()-1;
+			int bIndex = b.size()-1;
+			int carry = 0;
+			string result;
+			while(bIndex>=0&&aIndex>=0){
+				int sum = a[aIndex]-'0'+b[bIndex]-'0'+carry;
+				result = (char)(sum%2+'0')+result;
+				carry = sum/2;
+				--aIndex,--bIndex;
+			}
+			while (bIndex>=0){
+				int sum = b[bIndex]-'0' + carry;
+				result = (char)(sum%2+'0')+result;
+				carry = sum/2;
+				--bIndex;
+			}
+			while (aIndex>=0){
+				int sum = a[aIndex]-'0' + carry;
+				result = (char)(sum%2+'0')+result;
+				carry = sum/2;
+				--aIndex;
+			}
+			if(carry) result = "1"+result;
+			return result;
+		}
+	};
+
+## 64.Merge Two Sorted Lists ##
+	class Solution {
+	public:
+	    ListNode *mergeTwoLists(ListNode *l1, ListNode *l2) {
+	        ListNode head(0);
+	        ListNode *p = &head;
+	        while(l1&&l2){
+	            if(l1->val < l2->val){
+	                p->next = l1;
+	                l1 = l1->next;
+	            }else{
+	                p->next = l2;
+	                l2 = l2->next;
+	            }
+	            p = p->next;
+	        }
+	        if(l1) p->next = l1;
+	        if(l2) p->next = l2;
+	        return head.next;
+	    }
+	};
+## 65.Minimum Path Sum ##
+Given a m x n grid filled with non-negative numbers, find a path from top left to bottom right which minimizes the sum of all numbers along its path.
+**Note:** You can only move either down or right at any point in time.
+
+	class Solution {
+	public:
+	    int minPathSum(vector<vector<int> > &grid) {
+	        if(grid.empty()) return 0;
+	        int n = grid.front().size();
+	        vector<int> dp(n);
+	        dp[0] = grid[0][0];
+	        for(int i=1;i<n;++i){
+	            dp[i] = dp[i-1]+grid[0][i];
+	        }
+	        for(int i=1;i<grid.size();++i){
+	            for(int j=0;j<n;++j){
+	                if(j==0) dp[j] += grid[i][j];
+	                else{
+	                    dp[j] = min(dp[j],dp[j-1])+grid[i][j];
+	                }
+	            }
+	        }
+	        return dp[n-1];
+	    }
+	};
+## 66.Unique Paths ##
+![](http://i.imgur.com/wb5IPnE.png)
+**无障碍**
+
+	class Solution {
+	public:
+	    int uniquePaths(int m, int n) {
+	        if(n<1||m<1) return 0;
+	        vector<int> dp(n,1);
+	        for(int i=1;i<m;++i){
+	            for(int j=1;j<n;++j){
+	                dp[j] += dp[j-1];
+	            }
+	        }
+	        return dp[n-1];
+	    }
+	};
+
+**有障碍**
+
+	class Solution {
+	public:
+	    int uniquePathsWithObstacles(vector<vector<int> > &obstacleGrid) {
+	        if(obstacleGrid.empty()) return 0;
+	        int m = obstacleGrid.size();
+	        int n = obstacleGrid.front().size();
+	        vector<int> dp(n,0);
+	        dp[0] = 1;
+	        for(int i=0;i<m;++i){
+	            for(int j=0;j<n;++j){
+	                if(obstacleGrid[i][j]==1){
+	                    dp[j] = 0;
+	                }else if(j>0){
+	                    dp[j] += dp[j-1];
+	                }
+	            }
+	        }
+	        return dp[n-1];
+	    }
+	};
+## 67.Rotate List ##
+Given1->2->3->4->5->NULLand k =2,
+return4->5->1->2->3->NULL.
+
+	class Solution {
+	public:
+	    ListNode *rotateRight(ListNode *head, int k) {
+	        if(head==nullptr||head->next==nullptr) return head;
+	        int size = 0;
+	        for(ListNode *p=head;p;p=p->next){
+	            ++size;
+	        }
+	        k = k%size;
+	        if(k==0) return head;
+	        ListNode *slow = head,*fast = head;
+	        for(int i=0;i<k;++i) fast = fast->next;
+	        while(fast->next){
+	            slow = slow->next;
+	            fast = fast->next;
+	        }
+	        ListNode* pNode = slow->next;
+	        fast->next = head;
+	        slow->next = nullptr;
+	        return pNode;
+	    }
+	};
+## 68.Permutation Sequence ##
+获取第k个全排列，n[1,9]
+
+	 class Solution {
+	 public:
+		 string getPermutation(int n, int k) {
+			 if(n<1||k<1) return "";
+			 string s;
+			 for(int i=1;i<=n;++i) s += to_string(i);
+	         vector<int> x(n,1);
+	         for(int i=2;i<n;++i){     //N!
+	             x[i] = x[i-1]*i;
+	         }  
+	         --k;     //第一次不用算
+			 for (int i=1;i<n;++i) {
+				 int index = i-1+k/x[n-i];
+	             char c = s[index];
+	             for(int j=index;j>=i;--j){//调整
+	                 s[j] = s[j-1];
+	             }
+	             k %= x[n-i];
+	             s[i-1] = c;
+			 }
+			 return s;
+		 }
+	 };
+## 69.Spiral Matrix ##
+填充矩阵
+
+	 class Solution {
+	 public:
+		 vector<vector<int> > generateMatrix(int n) {
+			 vector<vector<int>> m(n,vector<int>(n));
+			 int dx[] = {0,1,0,-1};
+			 int dy[] = {1,0,-1,0};
+			 int x = n, y = n,num = 1,dir = 0;
+			 int px = 0,py = -1;
+			 while(num<=n*n){
+				 if(dir&1){
+					 for(int i=0;i<y;++i){
+						 px += dx[dir];
+						 py += dy[dir];
+						 m[px][py] = num++;
+					 }
+					 --x;
+				 }else{
+					 for(int i=0;i<x;++i){
+						 px += dx[dir];
+						 py += dy[dir];
+						 m[px][py] = num++;
+					 }
+					 --y;
+				 }
+				 dir = (dir+1)%4;
+			 }
+			 return m;
+		 }
+	 };
+
+螺旋打印
+
+	class Solution {
+	public:
+	    vector<int> spiralOrder(vector<vector<int> > &matrix) {
+	        vector<int> result;
+	        if(matrix.empty()) return result;
+	        int y = matrix.size(),x = matrix.front().size();
+	        int dx[] = {0,1,0,-1};
+	        int dy[] = {1,0,-1,0};
+	        int num = 1,dir = 0;
+	        int px = 0,py = -1;
+	        int size =x*y;
+	        while(result.size()<size){
+	            if(dir&1){
+	                for(int i=0;i<y;++i){
+	                    px += dx[dir];
+	                    py += dy[dir];
+	                    result.push_back(matrix[px][py]);
+	                }
+	                --x;
+	            }else{
+	                for(int i=0;i<x;++i){
+	                    px += dx[dir];
+	                    py += dy[dir];
+	                    result.push_back(matrix[px][py]);
+	                }
+	                --y;
+	            }
+	            dir = (dir+1)%4;
+	        }
+	        return result;
+	    }  
+	};
+## 70.Lenght of Last Word ##
+求由' '分隔的字符串中最后一个单词的长度，没有返回0
+
+	class Solution {
+	public:
+		int lengthOfLastWord(const char *s) {
+			int len = 0,pre = 0,cur = 0;
+			while(s[cur]!='\0'){
+				if(s[cur]==' '){
+					if (cur-pre){
+						len = cur-pre;
+					}
+					pre = cur+1;
+				}
+				++cur;
+			}
+			if (cur-pre){
+				len = cur-pre;
+			}
+			return len;
+		}
+	};
+## 71.Insert Interval ##
+有序区间插入合并
+
+	class Solution {
+	public:
+	    vector<Interval> insert(vector<Interval> &intervals, Interval newInterval) {
+	        vector<Interval> result;
+	        int index = 0;
+	        bool isInsert = false;
+	        for(index=0;index<intervals.size();++index){
+	            if(isInsert){
+	                if(result.back().end<intervals[index].start){
+	                    result.push_back(intervals[index]);
+					}else{
+	                    result.back().end = max(result.back().end,intervals[index].end);
+	                }
+	            }else{
+	                if(intervals[index].end<newInterval.start){
+	                    result.push_back(intervals[index]);
+	                }else if(intervals[index].start>newInterval.end){
+	                    result.push_back(newInterval);
+	                    result.push_back(intervals[index]);
+	                    isInsert = true;
+	                }else{
+	                    Interval temp = intervals[index];
+	                    temp.start = min(temp.start,newInterval.start);
+	                    temp.end = max(temp.end,newInterval.end);
+	                    result.push_back(temp);
+	                    isInsert = true;
+	                }
+	            }
+	        }
+	        if(!isInsert) result.push_back(newInterval);
+	        return result;
+	    }
+	};
+
+## 72.Merge Intervals ##
+Given[1,3],[2,6],[8,10],[15,18],
+return[1,6],[8,10],[15,18].
+
+	class Comp{
+	  public:
+	    bool operator()(const Interval& a,const Interval& b)const{
+	        if(a.start < b.start) return true;
+	        else if(a.start==b.start) return a.end<b.end;
+	        return false;
+	    }
+	};
+	class Solution {
+	public:
+	    vector<Interval> merge(vector<Interval> &intervals) {
+	        vector<Interval> result;
+	        if(intervals.empty()) return result;
+	        sort(intervals.begin(),intervals.end(),Comp());
+	        Interval temp = intervals.front();
+	        for(int i=1;i<intervals.size();++i){
+	            if(intervals[i].start<=temp.end){
+					temp.end = max(temp.end,intervals[i].end);
+				}else{
+					result.push_back(temp);
+					temp = intervals[i];
+				}
+	        }
+			result.push_back(temp);
+			return result;
+	    }
+	};
+## 73.Jump Game ##
+判断是否可以到达
+For example:
+A =[2,3,1,1,4], return true.
+A =[3,2,1,0,4], return false.
+
+	class Solution {
+	public:
+	    bool canJump(int A[], int n) {
+	        int i = 0,index = 0;
+	        while(i<=index){
+	            index = max(index,i+A[i]);
+	            if(index >= n-1) return true;
+	            ++i;
+	        }
+	        return false;
+	    }
+	};
+计算到达最后索引所需的最小步数
+
+	class Solution {
+	public:
+	    int jump(int A[], int n) {
+	        int step = 0,maxIndex = 0,nextIndex = 0;
+			for (int i=0;i<n-1;++i) {
+				if (i>maxIndex){
+					maxIndex = nextIndex;
+					++step;
+				}
+				nextIndex = max(nextIndex,A[i]+i);
+				if(nextIndex>=n-1) return step+1;
+			}
+			return step;
+	    }
+	};
+
+## 74.Maximum Subarray ##
+	class Solution {
+	public:
+	    int maxSubArray(int A[], int n) {
+	        int sum = 0,result = INT_MIN;
+	        for(int i=0;i<n;++i){
+	            if(sum<=0){
+	                sum = A[i];
+	            }else{
+	                sum += A[i];
+	            }
+	            result = max(result,sum);
+	        }
+	        return result;
+	    }
+	};
+## 75.Pow x-n ##
+
+	class Solution {
+	public:
+		double pow(double x, int n) {
+			double result = 1.0;
+			long long p = n;
+			if(n<0){
+				x = 1.0/x;
+				p = -p;
+			}
+			while(p){
+				if(p&1) result *= x;
+				x = x*x;
+				p = p>>1;
+			}
+			return result;
+		}
+	};
+## 76.N Queens ##
+![](http://i.imgur.com/l2Ffb2D.png)
+**所有方案**
+
+	class Solution {
+	public:
+		vector<vector<string> > solveNQueens(int n) {
+			if(n<1) return vector<vector<string>>();
+			vector<vector<int>> solves;
+			vector<vector<string>> result;
+			vector<int> rows(n,-1);       //每行对应的列索引
+			solve(solves,0,n,rows);
+			fillQueens(solves,result,n);
+			return result;
+		}
+	    //dfs 每次填充一行
+		void solve(vector<vector<int>> &solves,int row,int n,vector<int> &rows){
+			if(row==n) {
+				solves.push_back(rows);
+				return;
+			}
+			for(int j=0;j<n;++j){     //列
+				rows[row] = j;
+				if(check(rows,row,j)){
+					solve(solves,row+1,n,rows);
+				}
+				rows[row] = -1;
+			} 
+		}
+		bool check(vector<int> &rows,int row,int col){           //check摆放是否可以
+			for(int i=row-1;i>=0;i--){
+				if(rows[i]==col||abs(col-rows[i])==row-i){   //垂直与对角线
+					return false;
+				}
+			}
+			return true;
+		}
+		void fillQueens(vector<vector<int>>& solves,vector<vector<string>>& result,int n){
+			for(int i=0;i<solves.size();++i){
+				vector<string> board(n,string(n,'.'));
+				for(int j=0;j<n;++j){
+					board[j][solves[i][j]] = 'Q';
+				}
+				result.push_back(board);
+			}
+		}
+	};
+
+**方案数**
+
+	class Solution {
+	public:
+		int totalNQueens(int n) {
+			if(n<1) return 0;
+			count = 0;
+			vector<int> rows(n,-1);       //每行对应的列索引
+			solve(0,n,rows);
+			return count;
+		}
+		void solve(int row,int n,vector<int> &rows){
+			if(row==n) {
+				++count;
+				return;
+			}
+			for(int j=0;j<n;++j){     //列
+				rows[row] = j;
+				if(check(rows,row,j)){
+					solve(row+1,n,rows);
+				}
+				rows[row] = -1;
+			} 
+		}
+		bool check(vector<int> &rows,int row,int col){           //check摆放是否可以
+			for(int i=row-1;i>=0;i--){
+				if(rows[i]==col||abs(col-rows[i])==row-i){   //垂直与对角线
+					return false;
+				}
+			}
+			return true;
+		}
+	private:
+		int count;
+	};
+## 77.Anagrams ##
+"abc","bca","bac"
+
+	class Solution {
+	public:
+	    vector<string> anagrams(vector<string> &strs) {
+	        map<string,vector<int>> record;
+	        vector<string> result;
+	        for(int i=0;i<strs.size();++i){
+	            string key = strs[i];
+	            sort(key.begin(),key.end());
+	            record[key].push_back(i);
+	        }
+	        for(auto p : record){
+	            if(p.second.size()>1){
+	                for(auto i : p.second){
+	                    result.push_back(strs[i]);
+	                }
+	            }
+	        }
+	        return result;
+	    }
+	};
+## 78.Rotate Image ##
+You are given an n x n 2D matrix representing an image.
+Rotate the image by 90 degrees (clockwise).
+
+	class Solution {
+	public:
+	    void rotate(vector<vector<int> > &matrix) {
+	        if(matrix.empty()) return;
+	        int n = matrix.size();
+	    	for(int i=0;i<n/2;++i){
+	            int m = n/2;
+	            if(n&1) ++m;
+	            for(int j=0;j<m;++j){
+	                int x=i,y=j;
+	                int var = matrix[i][j];
+	                for(int k=0;k<4;++k){
+	                    int temp = x;
+	                    x = y,y=n-temp-1;
+	                    swap(var,matrix[x][y]);
+	                }
+	            }
+	        }
+	    }
+	};
+## 79.Permutations ##
+	class Solution {
+	public:
+	    vector<vector<int> > permuteUnique(vector<int> &num) {
+	        vector<vector<int>> result;
+	        sort(num.begin(),num.end());
+	        result.push_back(num);
+	        while(!permutation(num))
+	            result.push_back(num);
+	        return result;
+	    }
+	    bool permutation(vector<int> &num){
+	        int i = num.size()-1;
+	        while(i>0 && num[i]<=num[i-1]) --i;
+	        if(i==0) return true;
+	        int j = num.size()-1;
+	        while(num[j]<=num[i-1]) --j;
+	        swap(num[j],num[i-1]);
+	        reverse(num.begin()+i,num.end());
+	        return false;
+	    }
+	};
+## 80.wildcard-matching ##
 Implement wildcard pattern matching with support for'?'and'*'.   
 
 **Example:** 
@@ -1843,7 +2471,7 @@ Implement wildcard pattern matching with support for'?'and'*'.
 		}
 	};
 
-## Multiply Strings ##
+## 81.Multiply Strings ##
 Given two numbers represented as strings, return multiplication of the numbers as a string.
 
 **Code:**
@@ -1872,8 +2500,109 @@ Given two numbers represented as strings, return multiplication of the numbers a
 			return i==result.size()?"0":result.substr(i);  //如果全为0，返回"0"
 		}
 	};
+## 82.Trapping Rain Water ##
+![](http://i.imgur.com/LktQEBY.png)
 
-## Count and Say ##
+	class Solution {
+	public:
+	    int trap(int A[], int n) {
+	        int maxIndex = 0;
+	        for(int i=1;i<n;++i){
+	            if(A[i]>A[maxIndex]) maxIndex = i;
+	        }
+	        int water = 0,left = 0,right = 0;
+	        for(int i=0;i<maxIndex;++i){
+	            if(left<A[i]) left = A[i];
+	            else water += left-A[i];
+	        }
+	        for(int i=n-1;i>maxIndex;--i){
+	            if(right<A[i]) right = A[i];
+	            else water += right-A[i];
+	        }
+	        return water;
+	    }
+	};
+## 83.First Missing Positive ##
+Given[1,2,0]return 3,
+and[3,4,-1,1]return 2.
+
+将数字移到相应的位置使之有序，再找到不符合的第一个数（由于可以有重复值，所以无法异或求取）
+
+	class Solution {
+	public:
+	    int firstMissingPositive(int A[], int n) {
+	        int index = 0;
+	        while(index<n){
+	            if(A[index]>0&&A[index]<n&&A[A[index]-1]!=A[index]){
+	                swap(A[index],A[A[index]-1]);
+	            }else{
+	                ++index;
+	            }
+	        }
+	        index = 0;
+	        while(index<n && A[index]==index+1){
+	            ++index;
+	        }
+	        return index+1;
+	    }
+	};
+## 84.Combination Sum ##
+给定正整数集合（无重复值），找到所有和为target的组合
+
+	class Solution {
+	public:
+	  vector<vector<int> > combinationSum(vector<int> &candidates, int target) {
+		  sort(candidates.begin(),candidates.end());
+		  vector<int> combine;
+		  vector<vector<int>> result;
+		  solve(combine,result,candidates,0,target,0);
+		  return result;
+	  }
+	  void solve(vector<int> &combine,vector<vector<int>> &result,vector<int> &candidates,int sum,int target,int index){
+		  if(sum==target){
+			  result.push_back(combine);
+			  return ;
+		  }else{
+			  for(int i=index;i<candidates.size();++i){
+				  if(sum+candidates[i]<=target){
+					  combine.push_back(candidates[i]);
+					  solve(combine,result,candidates,sum+candidates[i],target,i); //i表示同一个数可以多次取
+					  combine.pop_back();
+				  }
+			  }
+		  }
+	  }
+	};
+
+给定正整数集合（有重复值），找到所有和为target的组合
+
+	class Solution {
+	public:
+	  vector<vector<int> > combinationSum2(vector<int> &num, int target) {
+		  sort(num.begin(),num.end());
+		  vector<int> combine;
+		  vector<vector<int>> result;
+		  solve(combine,result,num,0,target,0);
+		  return result;
+	  }
+	  void solve(vector<int> &combine,vector<vector<int>> &result,vector<int> &candidates,int sum,int target,int index){
+		  if(sum==target){
+			  result.push_back(combine);
+			  return ;
+		  }else{
+			  for(int i=index;i<candidates.size();++i){
+				  if(sum+candidates[i]<=target){
+					  if(i==index || candidates[i]!=candidates[i-1]){
+						  combine.push_back(candidates[i]);
+						  solve(combine,result,candidates,sum+candidates[i],target,i+1);
+						  combine.pop_back();
+					  } //第一次可以，第二次有重复
+				  }
+			  }
+		  }
+	  }
+	};
+## 85.Count and Say ##
 The count-and-say sequence is the sequence of integers beginning as follows:
 
     1, 11, 21, 1211, 111221, ...  
@@ -1905,7 +2634,7 @@ Given an integer n, generate the nth sequence.
 	    }
 	};
 
-## Sudoku Solver ##
+## 86.Sudoku Solver ##
 Write a program to solve a Sudoku puzzle by filling the empty cells.  
 Empty cells are indicated by the character '.'.  
 
@@ -1932,9 +2661,9 @@ Empty cells are indicated by the character '.'.
 	    }
 	    bool check(vector<vector<char>> &board,int x,int y,char c){  //判断是否可以填入
 	        for(int i=0;i<9;++i){
-	            if(board[x][i]==c || board[i][y]==c) return false;
+	            if(board[x][i]==c || board[i][y]==c) return false;//水平&垂直
 	        }
-	        int row = x - x%3,col = y - y%3;
+	        int row = x - x%3,col = y - y%3;	//所在矩形块
 	        for(int i=0;i<3;++i){
 	            for(int j=0;j<3;++j){
 	                if(board[row+i][col+j]==c) return false;
@@ -1944,94 +2673,25 @@ Empty cells are indicated by the character '.'.
 	    }
 	};
 
-## Valid Sudoku ##
+**Valid Sudoku**
 判断一个数独是否有效，行，列，9个子矩阵
-## Search Insert Position ##
-Given a sorted array and a target value, return the index if the target is found. If not, return the index where it would be if it were inserted in order.  
-**Code:**      
-   
-	class Solution {
-	public:
-	    int searchInsert(int A[], int n, int target) {
-	        int left = 0,right = n-1;
-	        while(left<right){
-	            int mid = (left+right)/2;
-	            if(A[mid]==target) return mid;
-	            else if(A[mid]>target) right = mid;
-	            else left = mid+1;
-	        }
-	        if(right==-1) return 0;
-	        if(A[left]<target) return left+1;
-	        return left;
-	    }
-	};
-
-## Search for a Range ##
-Given a sorted array of integers, find the starting and ending position of a given target value.   
-If the target is not found in the array, return [-1, -1].   
-**Example:**
-
-	[5, 7, 7, 8, 8, 10] ,8
-	[3, 4]
-**Code:** 
-
-	class Solution {
-	public:
-		vector<int> searchRange(int A[], int n, int target) {
-			vector<int> result(2,0);
-			result[0] = searchFirst(A,n,target);
-			result[1] = searchLast(A,n,target);
-			return result;
-		}
-		int searchFirst(int A[],int n,int target){
-			int left = 0,right = n-1;
-			while(left<right){
-				int mid = (left+right)/2;
-				if(A[mid]==target) right = mid;
-				else if(A[mid]>target) right = mid-1;
-				else left = mid+1;
-			}
-	        if(n<=0 || A[left]!=target) return -1;
-	        return left;
-		}
-		int searchLast(int A[],int n,int target){
-			int left = 0,right = n-1;
-			while(left<right){
-				int mid = (left+right+1)/2;       //防止[2,2]死循环
-				if(A[mid]==target) left = mid;
-				else if(A[mid]>target) right = mid-1;
-				else left = mid+1;
-			}
-			if(n<=0 || A[left]!=target) return -1;
-	        return left;
-		}
-	};
-
-## Longest Valid Parentheses ##
-Given a string containing just the characters'('and')', find the length of the longest valid (well-formed) parentheses substring.  
-**Example:**  
-
-    "())"  		2
-    ")()())"	4
-
-**Code:** 
-
+## 87.Longest Valid Parentheses ##
+在仅含有'('和')'的字符串中求最长的有效括号匹配。
+For"(()", the longest valid parentheses substring is"()", which has length = 2.
+")()())", where the longest valid parentheses substring is"()()", which has length = 4.
 
 	class Solution {
 	public:
 	    int longestValidParentheses(string s) {
-	        int result = 0,left = 0;
-	        stack<int> st;
+	        int result = 0,left = 0;    //left表示左边是否有剩余的'('
+	        stack<int> st;      		//记录索引
 	        for(int i=0; i<s.size(); ++i){
 	            if(s[i]==')'&&left){
-	                while(!st.empty()){
-	                    int index = st.top();
+	                while(s[st.top()]!='('){
 	                    st.pop();
-	                    if(s[index]=='('){
-	                        --left;
-	                        break;
-	                    }
 	                }
+	                st.pop();
+	                --left;
 	            }else{
 	                if(s[i]=='(') ++left;
 	                st.push(i);
@@ -2047,30 +2707,43 @@ Given a string containing just the characters'('and')', find the length of the l
 	        return result;
 	    }
 	};
-
-## Substring with Concatenation of All Words
-You are given a string, s, and a list of words, words, that are all of the same length. Find all starting indices of substring(s) in s that is a concatenation of each word in words exactly once and without any intervening characters.
-
-**Example:**
-
-	s: "barfoothefoobarman"
-	words: ["foo", "bar"]
-	return the indices: [0,9].
-**Code:**  
+## 88.Next Permutation ##
+	class Solution {
+	public:
+	    void nextPermutation(vector<int> &num) {
+	        if(num.size()<=1) return;
+	        int i = num.size()-1;
+	        while(i>0 && num[i]<=num[i-1]) --i;
+	        if(i==0) {                           //5,4,3,2,1
+	            reverse(num.begin(),num.end());
+	        }else{
+	            int j = num.size()-1;
+	            while(num[j]<=num[i-1]) --j;
+	            swap(num[j],num[i-1]);
+	            reverse(num.begin()+i,num.end());
+	        }
+	    }
+	};
+## 89.Substring with Concatenation of all Words ##
+You are given a string, S, and a list of words, L, that are all of the same length. Find all starting indices of substring(s) in S that is a concatenation of each word in L exactly once and without any intervening characters.
+For example, given:
+S:"barfoothefoobarman"
+L:["foo", "bar"]
+You should return the indices:[0,9].
 
 	class Solution {
 	public:
-	    vector<int> findSubstring(string s, vector<string> &words) {
+	    vector<int> findSubstring(string S, vector<string> &L) {
 	        vector<int> index;
 	        map<string,int> record;
-	        for(auto word : words)
+	        for(auto word : L)
 	            record[word]++;
-	        int size = words.size(),len = words.front().size();
-	        for(int i=0;i<=(int)s.size()-size*len;++i){
+	        int size = L.size(),len = L.front().size();
+	        for(int i=0;i<=(int)S.size()-size*len;++i){
 	            map<string,int> seen;
 	            int n = 0;
-	            while(n < size){
-	                string word = s.substr(i+n*len,len);
+	            while(n < size){ //小于单词集合数
+	                string word = S.substr(i+n*len,len);
 	                seen[word]++;
 	                if(seen[word]>record[word])
 	                    break;
@@ -2081,10 +2754,35 @@ You are given a string, s, and a list of words, words, that are all of the same 
 	        return index;
 	    }
 	};
+## 90.Divide Two Integers ##
+不用乘法
 
-## KMP
+	class Solution {
+	public:
+		int divide(int dividend, int divisor) {
+			if(divisor==0 || (dividend==INT_MIN&&divisor==-1))
+				return INT_MAX;
+			int sign = ((dividend<0)^(divisor<0))?-1:1;
+			long long a = dividend;
+			long long b = divisor;
+			a = a>0?a:-a;
+			b = b>0?b:-b;
+			long long result = 0;
+			while(a>=b){
+				int count = 1;
+				long long d = b;
+				while(a>=(d<<1)){
+					count <<= 1;
+					d <<= 1;
+				}
+				a -= d;
+				result += count;
+			}
+			return sign==1?result:-result;
+		}
+	};
 
-
+## 91.KMP
 	vector<int> generateNext(const string &s)
 	{
 		vector<int> next(s.size(),-1);           //第一位为标记位
@@ -2118,7 +2816,7 @@ You are given a string, s, and a list of words, words, that are all of the same 
 		return j==size2?i-j:-1;
 	}
 
-## Reverse Nodes in k-Group
+## 92.Reverse Nodes in k-Group
 
 **Example:**
 
@@ -2166,9 +2864,28 @@ You are given a string, s, and a list of words, words, that are all of the same 
 	        return pre;
 	    }
 	};
+## 93.Swap Nodes in Pairs ##
+Given1->2->3->4, you should return the list as2->1->4->3.
 
-
-## Merge k Sorted Lists
+	class Solution {
+	public:
+	    ListNode *swapPairs(ListNode *head) {
+	        ListNode node(0);
+	        node.next = head;
+	        ListNode *cur = &node;
+	        while(cur && cur->next &&cur->next->next){
+	            ListNode *next = cur->next->next->next;
+	            ListNode *p = cur->next;
+	            ListNode *q = cur->next->next;
+	            cur->next = q;
+	            q->next = p;
+	            p->next = next;
+	            cur = p;
+	        }
+	        return node.next;
+	    }
+	};
+## 94.Merge k Sorted Lists
 	class Solution {
 	public:
 	    ListNode *mergeKLists(vector<ListNode *> &lists) {
@@ -2197,8 +2914,7 @@ You are given a string, s, and a list of words, words, that are all of the same 
 	        return node.next;
 	    }
 	};
-
-## Generate Parentheses
+## 95.Generate Parentheses
 **Example:**
  given n = 3, a solution set is:
  
@@ -2231,8 +2947,275 @@ You are given a string, s, and a list of words, words, that are all of the same 
 	        }
 	    }
 	};
+## 96.Valid Parentheses ##
+()"and"()[]{}"are all valid but"(]"and"([)]"are not.
 
-## Regular Expression Matching
+	class Solution {
+	public:
+	    bool isValid(string s) {
+	        stack<char> st;
+	        map<char,char> hash;
+	        hash[')'] = '(';
+	        hash[']'] = '[';
+	        hash['}'] = '{';
+	        for(auto c : s){
+	            if(c=='(' || c=='{' || c=='['){
+	                st.push(c);
+	            }else if(c==')'||c==']'||c=='}'){
+	                if(!st.empty() && st.top()==hash[c]){
+	                    st.pop();
+	                }else{
+	                    return false;
+	                }
+	            }
+	        }
+	        return st.empty();
+	    }
+	};
+## 97.Search Insert Position ##
+Given a sorted array and a target value, return the index if the target is found. If not, return the index where it would be if it were inserted in order.  
+**Code:**      
+   
+	class Solution {
+	public:
+	    int searchInsert(int A[], int n, int target) {
+	        int left = 0,right = n-1;
+	        while(left<right){
+	            int mid = (left+right)/2;
+	            if(A[mid]==target) return mid;
+	            else if(A[mid]>target) right = mid;
+	            else left = mid+1;
+	        }
+	        if(right==-1) return 0;
+	        if(A[left]<target) return left+1;
+	        return left;
+	    }
+	};
+
+## 98.Search for a Range ##
+Given a sorted array of integers, find the starting and ending position of a given target value.   
+If the target is not found in the array, return [-1, -1].   
+**Example:**
+
+	[5, 7, 7, 8, 8, 10] ,8
+	[3, 4]
+**Code:** 
+
+	class Solution {
+	public:
+		vector<int> searchRange(int A[], int n, int target) {
+			vector<int> result(2,0);
+			result[0] = searchFirst(A,n,target);
+			result[1] = searchLast(A,n,target);
+			return result;
+		}
+		int searchFirst(int A[],int n,int target){
+			int left = 0,right = n-1;
+			while(left<right){
+				int mid = (left+right)/2;
+				if(A[mid]==target) right = mid;
+				else if(A[mid]>target) right = mid-1;
+				else left = mid+1;
+			}
+	        if(n<=0 || A[left]!=target) return -1;
+	        return left;
+		}
+		int searchLast(int A[],int n,int target){
+			int left = 0,right = n-1;
+			while(left<right){
+				int mid = (left+right+1)/2;       //防止[2,2]死循环
+				if(A[mid]==target) left = mid;
+				else if(A[mid]>target) right = mid-1;
+				else left = mid+1;
+			}
+			if(n<=0 || A[left]!=target) return -1;
+	        return left;
+		}
+	};
+
+## 99.Remove Nth Node from End of List ##
+删除倒数第N个节点
+
+	class Solution {
+	public:
+	    ListNode *removeNthFromEnd(ListNode *head, int n) {
+	        if(head==nullptr || n<1) return head;
+	        ListNode *p = head;
+	        for(int i=1;i<n;++i){
+	            p = p->next;
+	            if(p==nullptr) return head;
+	        }
+	        ListNode node(0);
+	        node.next = head;
+	        ListNode *cur = &node;
+	        while(p->next){
+	            p = p->next;
+	            cur = cur->next;
+	        }
+	        ListNode *temp = cur->next;
+	        cur->next = cur->next->next;
+	        delete temp;
+	        return node.next;
+	    }
+	};
+## 100.Letter Combinations of a Phone Number ##
+![](http://i.imgur.com/KquTcME.png)
+
+	string s[10] = {" ","","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"};
+	class Solution {
+	public:
+		vector<string> letterCombinations(string digits) {
+			vector<string> result;
+			solve(digits,result,"",0);
+			return result;
+		}
+		void solve(string digits,vector<string> &result,string str,int index){
+	        if(index == digits.size()) {
+	            result.push_back(str);
+	            return;
+	        }
+			string combine = s[digits[index]-'0'];
+			for(int i=0;i<combine.size();++i){
+				solve(digits,result,str+combine[i],index+1);
+			}
+		}
+	};
+
+## 101.3Sum ##
+a + b + c = 0
+
+	class Solution {
+	public:
+		vector<vector<int> > threeSum(vector<int> &num) {
+			vector<vector<int>> result;
+			sort(num.begin(),num.end());
+			for(int i=0;i<num.size();++i){
+				if(i>0 && num[i]==num[i-1]) continue;
+				int j = i+1,k = num.size()-1;
+				while(j<k){
+					if(num[i]+num[j]+num[k]>0){
+						--k;
+					}else if(num[i]+num[j]+num[k]<0){
+						++j;
+					}else{
+						vector<int> res;
+						res.push_back(num[i]);
+						res.push_back(num[j]);
+						res.push_back(num[k]);
+						result.push_back(res);
+						do {
+							++j;
+						} while (j<k && num[j]==num[j-1]);
+						do {
+							--k;
+						} while (j<k && num[k]==num[k+1]);
+					}
+				}
+			}
+			return result;
+		}
+	};
+**3Sum Closest**
+Find three integers in S such that the sum is closest to a given number, target. Return the sum of the three integers.
+
+	class Solution {
+	public:
+	    int threeSumClosest(vector<int> &num, int target) {
+	        sort(num.begin(),num.end());
+	        int result = num[0]+num[1]+num[3];
+	        for(int i=0;i<num.size();++i){
+	            int j = i+1,k = num.size()-1;
+	            while(j<k){
+	                if( abs(result-target) > abs(num[i]+num[j]+num[k]-target) ){
+	                    result = num[i]+num[j]+num[k];
+	                }
+	                if(num[i]+num[j]+num[k]>target){
+	                    --k;
+	                }else if(num[i]+num[j]+num[k]<target){
+	                    ++j;
+	                }else{
+	                    return target;
+	                }
+	            }
+	        }
+	        return result;
+	    }
+	};
+
+**4Sum**
+
+	class Solution {
+	public:
+		vector<vector<int> > fourSum(vector<int> &num, int target) {
+			vector<vector<int>> result;
+			if(num.size()<4) return result;
+			set<vector<int>> res_set;
+			sort(num.begin(),num.end());
+			for(int i=0;i<num.size();++i){
+				for(int j=i+1;j<num.size();++j){
+					int left = j+1,right = num.size()-1;
+					int remain = target-num[i]-num[j];
+					while(left<right){
+						if(num[left]+num[right]==remain){
+							vector<int> res;
+							res.push_back(num[i]);
+							res.push_back(num[j]);
+							res.push_back(num[left]);
+							res.push_back(num[right]);
+							res_set.insert(res);
+							++left,--right;
+						}else if(num[left]+num[right]>remain){
+							--right;
+						}else{
+							++left;
+						}
+					}
+				}
+			}
+			result.insert(result.begin(),res_set.begin(),res_set.end());
+			return result;
+		}
+	};
+## 102.Longest Common Prefix ##
+字符串数组的最长公共前缀
+
+	class Solution {
+	public:
+		string longestCommonPrefix(vector<string> &strs) {
+			if (strs.empty()){
+				return "";
+			}
+			string prefix = strs.front();
+			int size = prefix.size();
+			for(int i=1;i<strs.size();++i){
+				size = min(size,(int)strs[i].size());
+				string s = strs[i];
+				for(int j=0;j<size;++j){
+					if(prefix[j] != s[j]){
+						size = j;
+						break;
+					}
+				}
+			}
+			return prefix.substr(0,size);
+		}
+	};
+## 103.Container with Most Water ##
+	class Solution {
+	public:
+	    int maxArea(vector<int> &height) {
+	        int result = 0;
+	        int left=0,right=height.size()-1;
+	        while(left<right){
+	            int h = min(height[left],height[right]);
+	            result = max(result,h*(right-left));
+	            while(left<right && height[left]<=h) ++left;
+	            while(left<right && height[right]<=h) --right;
+	        }
+	        return result;
+	    }
+	};
+## 104.Regular Expression Matching
 Implement regular expression matching with support for '.' and '*'.
 **'.'** Matches any single character.
 '*' Matches zero or more of the preceding element.
@@ -2269,8 +3252,95 @@ Implement regular expression matching with support for '.' and '*'.
 	        return solve(s,p,si,pi+2);
 	    }
 	};
-	
-## Longest Palindromic Substring(最长回文字串)
+## 105.Palindrome Number ##
+	class Solution {
+	public:
+	    bool isPalindrome(int x) {
+	        if(x<0||(x!=0&&x%10==0)) return false;
+	        int y = 0;
+	        while(x>y){
+	            y = y*10+x%10;
+	            x /= 10;
+	        }
+	        return x==y||(y/10==x);
+	    }
+	};
+## 106.String to Integer atoi ##
+
+	class Solution {
+	public:
+	    int atoi(const char *str) {
+	        long result = 0;
+	        int sign = 1;
+	        while(*str!='\0'&&*str==' ') ++str;
+	       	if(*str=='-'){
+	            sign = -1;
+	        }
+	        if(*str=='-'||*str=='+') ++str;
+	        while(*str!='\0'){
+	            if(*str<='9'&&*str>='0'){
+	                result = result*10+(*str-'0');
+	                if(result*sign>=INT_MAX||result*sign<=INT_MIN){
+	                    return sign==1?INT_MAX:INT_MIN;
+	                }
+	            }else{
+	                break;
+	            }
+	            ++str;
+	        }
+	        return result*sign;
+	    }
+	};
+## 107.Reverse Integer ##
+	class Solution {
+	public:
+	    int reverse(int x) {
+	        long var = 0, n = x;
+	        int sign = 1;
+	        if(n<0){
+	            n = -n;
+	            sign = -1;
+	        }
+	        while(n){
+	            var = var*10 + n%10;
+	            n /= 10;
+	        }
+	        if(var*sign>=INT_MAX || var*sign<=INT_MIN){
+	            return 0;
+	        }
+	        return var*sign;
+	    }
+	};
+## 108.Zigzag Conversion ##
+The string"PAYPALISHIRING"is written in a zigzag pattern on a given number of rows like this: (you may want to display this pattern in a fixed font for better legibility)
+
+	P   A   H   N
+	A P L S I I G
+	Y   I   R
+And then read line by line:"PAHNAPLSIIGYIR"
+
+	class Solution {
+	public:
+	    string convert(string s, int nRows){
+	        if(nRows == 1) return s;
+	        vector<string> result(nRows);
+	        int i = 0;
+	        while (i<s.size()){
+	            for (int j=0;j<nRows&&i<s.size();++j) {
+	                result[j] += s[i++];
+	            }
+	            for (int j=nRows-2;j>0&&i<s.size();--j) {
+	                result[j] += s[i++];
+	            }
+	        }
+	        string str;
+	        for (int i=0;i<nRows;++i) {
+	            str += result[i];
+	        }
+	        return str;
+		}
+	};
+## 109.Longest Palindromic Substring(最长回文字串)
 **code:**
 
 	class Solution {
@@ -2314,7 +3384,7 @@ Implement regular expression matching with support for '.' and '*'.
 		}
 	};
 
-## Two Sum ##
+## 110.Two Sum ##
 **Example:**
 
 	Input: numbers={2, 7, 11, 15}, target=9
@@ -2338,3 +3408,100 @@ Implement regular expression matching with support for '.' and '*'.
 			return result;
 		}
 	};
+
+## 111.Longest Substring without Repeating Characters ##
+	class Solution {
+	public:
+		int lengthOfLongestSubstring(string s) {
+			vector<int> record(26,0);
+			int left = 0;
+			int maxLen = 0;
+			for(int i=0;i<s.size();++i){
+				int index = s[i]-'a';
+				++record[index];
+				if(record[index]==1){
+					maxLen = max(maxLen,i-left+1);
+				} else{
+					while(record[index]>1){
+						--record[s[left++]-'a'];
+					}
+				}
+			}
+			return maxLen;
+		}
+	};
+## 112.Median of Two Sorted Arrays ##
+	class Solution {
+	public:
+		double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
+			int size = nums1.size()+nums2.size(); 
+			if (size%2==1){
+				return findKth(nums1,nums2,0,0,size/2+1);
+			}else{
+				return ((double)findKth(nums1,nums2,0,0,size/2)+findKth(nums1,nums2,0,0,size/2+1))/2;
+			}
+		}
+		int findKth(vector<int>& v1,vector<int>& v2,int s1,int s2,int k)
+		{
+			int m = v1.size()-s1;
+			int n = v2.size()-s2;
+			if (m>n){
+				return findKth(v2,v1,s2,s1,k);
+			}
+			if (m==0){
+				return v2[s2+k-1];
+			}
+			if (k==1){
+				return min(v1[s1],v2[s2]);
+			}
+			int s1_num = min(k/2,m);
+			int s2_num = k-s1_num;
+			if (v1[s1+s1_num-1] > v2[s2+s2_num-1]){
+				return findKth(v1,v2,s1,s2+s2_num,k-s2_num);
+			}else if (v1[s1+s1_num-1] < v2[s2+s2_num-1]){
+				return findKth(v1,v2,s1+s1_num,s2,k-s1_num);
+			}else{
+				return v1[s1+s1_num-1];
+			}
+		}
+	};
+## 113.Add Two Numbers ##
+**Input:** (2 -> 4 -> 3) + (5 -> 6 -> 4)
+**Output:** 7 -> 0 -> 8
+
+	class Solution {
+	public:
+	    ListNode *addTwoNumbers(ListNode *l1, ListNode *l2) {
+	        ListNode head(0);
+	        ListNode *p = &head;
+	        int carry = 0;
+	        while(l1||l2||carry){
+	            int v1 = l1?l1->val:0;
+	            int v2 = l2?l2->val:0;
+	            int sum = carry+v1+v2;
+	            p->next = new ListNode(sum%10);
+	            p = p->next;
+	            l1 = l1?l1->next:l1;
+	            l2 = l2?l2->next:l2;
+	            carry = sum/10;
+	        }
+	        return head.next;
+	    }
+	};
+## 数组中找唯一重复元素 ##
+[1,n]范围的元素放入大小为n+1的数组中，其中有一个重复值，找出该重复值
+1. 位图法
+2. 求和取差法
+3. 异或法
+
+
+	int duplicateValue(vector<int> vec){ 
+		int result = 0;
+		for (auto e : vec) {     //A^A^B
+			result ^= e;
+		}
+		for (int i=1;i<vec.size();++i) {     //(A^B)^(A^A^B) = A
+			result ^= i;
+		}
+		return result;
+	}
