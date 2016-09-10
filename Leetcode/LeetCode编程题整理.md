@@ -3755,3 +3755,49 @@ N!阶乘尾部0的个数
 			e = e>>1;
 		}
 	}
+
+## 123.Binary Search Tree Iterator ##
+next() and hasNext() should run in average O(1) time and uses O(h) memory, where h is the height of the tree.
+
+	class BSTIterator {
+	public:
+	    BSTIterator(TreeNode *root) {
+	       store(root);
+	    }
+	    bool hasNext() {
+	        return !s.empty();
+	    }
+	    int next() {
+	        TreeNode *node = s.top();
+	        s.pop();
+	        int result = node->val;
+	        store(node->right);
+	        return result;
+	    }
+	private:
+	    stack<TreeNode*> s;
+	    void store(TreeNode *node){
+	         while(node){
+	            s.push(node);
+	            node = node->left;
+	        }
+	    }
+	};
+## 124.Dungeon Game ##
+![](http://i.imgur.com/s1KUaHh.png)
+地牢救公主
+
+	class Solution {
+	public:
+		int calculateMinimumHP(vector<vector<int>>& dungeon) {
+			int size = dungeon.front().size();
+			vector<int> hp(size+1,INT_MAX);  //到达目的所需的最小生命值
+			hp[size-1] = 1;
+			for (int i=dungeon.size()-1;i>=0;--i) {
+				for (int j=size-1;j>=0;--j) {
+					hp[j] = max(1,min(hp[j],hp[j+1])-dungeon[i][j]);
+				}
+			}
+			return hp[0];
+		}
+	};
