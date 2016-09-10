@@ -3495,7 +3495,7 @@ And then read line by line:"PAHNAPLSIIGYIR"
 	        return head.next;
 	    }
 	};
-## 数组中找唯一重复元素 ##
+## 114.数组中找唯一重复元素 ##
 [1,n]范围的元素放入大小为n+1的数组中，其中有一个重复值，找出该重复值
 1. 位图法
 2. 求和取差法
@@ -3511,4 +3511,247 @@ And then read line by line:"PAHNAPLSIIGYIR"
 			result ^= i;
 		}
 		return result;
+	}
+## 115.Maximum Gap ##
+Given an unsorted array, find the maximum difference between the successive elements in its sorted form.
+Try to solve it in linear time/space.
+Return 0 if the array contains less than 2 elements.
+
+	class Solution {
+	public:
+		int maximumGap(vector<int>& nums) {
+			int size = nums.size();
+			if (size<2) return 0;
+			int maxV = *max_element(nums.begin(),nums.end());
+			int minV = *min_element(nums.begin(),nums.end());
+			if (maxV==minV) return 0;
+			double slotGap = (double)(maxV-minV)/(size-1);
+			vector<int> slotMax(size,INT_MIN);
+			vector<int> slotMin(size,INT_MAX);
+			for (auto v : nums) {
+				int index = (v-minV)/slotGap;
+				slotMin[index] = min(v,slotMin[index]);
+				slotMax[index] = max(v,slotMax[index]);
+			}
+			int maxGap = INT_MIN,pre = minV;
+			for (int i=0;i<size;++i) {       //最大gap肯定在槽之间
+				if (slotMax[i]==INT_MIN) continue;
+				maxGap = max(maxGap,slotMin[i]-pre);
+				pre = slotMax[i];
+			}
+			return maxGap;
+		}
+	};
+
+## 116.Maximum Product Subarray ##
+Given the array [2,3,-2,4],
+the contiguous subarray [2,3] has the largest product = 6.
+
+	class Solution {
+	public:
+		int maxProduct(vector<int>& nums) {
+			int result = INT_MIN;
+			int rmin_pre = nums[0],rmin_next;
+			int rmax_pre = nums[0],rmax_next;
+			result = max(result,rmax_pre);
+			for(int i=1;i<nums.size();++i){
+				rmax_next = max(max(rmax_pre*nums[i],rmin_pre*nums[i]),nums[i]);
+				rmin_next = min(min(rmax_pre*nums[i],rmin_pre*nums[i]),nums[i]);
+				result = max(result,rmax_next);
+				rmin_pre = rmin_next;
+				rmax_pre = rmax_next;
+			}
+			return result;
+		}
+	};
+
+## 117.Find Minimum in Rotated Sorted Array ##
+旋转有序数组中的最小值
+
+	class Solution {
+	public:
+		int findMin(vector<int>& nums) {
+			int left=0,right=nums.size()-1;
+			int mid;
+			while(left<right){
+				mid = (left+right)/2;
+				if (nums[mid]>nums[right]){
+					left = mid+1;
+				}else{
+					right = mid;
+				}
+			}
+			return nums[right];
+		}
+	};
+
+带重复元素
+	
+	class Solution {
+	public:
+		int findMin(vector<int>& nums) {
+			int left=0,right=nums.size()-1;
+			int mid;
+			while(left<right){
+				while(left<right&&nums[left]==nums[left+1])
+					++left;
+				while(left<right&&nums[right]==nums[right-1])
+					--right;
+				mid = (left+right)/2;
+				if (nums[mid]>nums[right]){
+					left = mid+1;
+				}else{
+					right = mid;
+				}
+			}
+			return nums[right];
+		}
+	};
+
+## 118.Excel Sheet Column Title ##
+	    1 -> A
+	    2 -> B
+	    3 -> C
+	    ...
+	    26 -> Z
+	    27 -> AA
+	    28 -> AB 
+Code：
+
+	class Solution {
+	public:
+		string convertToTitle(int n) {
+			string result;
+			while (n){
+				--n;
+				result = (char)(n%26+'A')+result;
+				n /= 26;
+			}
+			return result;
+		}
+	};
+
+反过来：
+
+	class Solution {
+	public:
+		int titleToNumber(string s) {
+			int result=0;
+			for (char c:s){
+				result = result*26+(c-'A'+1);
+			}
+			return result;
+		}
+	};
+
+## 119.Majority Element ##
+The majority element is the element that appears more than ⌊ n/2 ⌋ times.
+
+	class Solution {
+	public:
+		int majorityElement(vector<int>& nums) {
+			int result;
+			int count=0;
+			for(int i=0;i<nums.size();++i) {
+				if (count==0){
+					result = nums[i];
+					++count;
+				} else if (result==nums[i]) {
+					++count;
+				} else {
+					--count;
+				}
+			}
+			return result;
+		}
+	};
+
+## 120.Fraction to Recurring Decimal ##
+Given numerator = 1, denominator = 2, return "0.5".
+Given numerator = 2, denominator = 1, return "2".
+Given numerator = 2, denominator = 3, return "0.(6)".
+
+	class Solution {
+	public:
+		string fractionToDecimal(int numerator, int denominator) {
+			if (numerator==0) return "0";
+			string result;
+			if (numerator<0 ^ denominator<0)
+				result += "-";
+			long long num = numerator,den = denominator;
+			num = num<0?-num:num;
+			den = den<0?-den:den;
+			result += to_string(num/den);  //整数部分
+			num = num%den;            
+			if (num) result += ".";
+			map<int,int> record;
+			int index = 0;
+			while (num) {               //小数部分
+				if (record.count(num)){
+					result.insert(result.begin()+record[num],'(');
+					result += ")";
+					break;
+				}else{
+					record[num] = result.size();
+					num *= 10;
+					result += (char)(num/den+'0');
+					num = num%den;
+				}
+			}
+			return result;
+		}
+	};
+
+## 121.Factorial Trailing Zeroes ##
+N!阶乘尾部0的个数
+
+	 class Solution {
+	 public:
+		 int trailingZeroes(int n) {
+			 int zeroes = 0;
+			 while(n){
+			 	zeroes += n/5;
+			 	n /= 5;
+			 }
+			 return zeroes;
+		 }
+	 };
+
+## 122.数组调整 ##
+
+	[7,6,5,4,3,2,1] return 
+	[1,7,2,6,3,5,4]
+要求：时间复杂度O(n),空间复杂度O（1）
+
+	void solve(vector<int> &v)
+	{
+		for (auto &e : v){   //用新增的一位表示是否被替换过
+			e = e<<1;
+		}
+		int storedIndex = v.size()-1,storedValue = v.back();
+		int index = storedIndex,count = v.size();
+		while (count--) {
+			if (index&1) { //奇，直接用index/2索引所对应的值替换
+				v[index] = v[index/2]|1;
+				index /= 2;
+			}else {        //偶，从后往前找第index/2+1个数替换
+				int newIndex = v.size()-(1+index/2);
+				if (newIndex==storedIndex){
+					v[index] = storedValue|1;  //打上标记
+					while (storedIndex>=0 && v[storedIndex]&1 ){ //更新storedIndex
+						--storedIndex;
+					}
+					index = storedIndex;
+					if (storedIndex>=0){ //如果还有未替换的值
+						storedValue = v[storedIndex];
+					}
+				}else{
+					v[index] = v[newIndex]|1; //打上标记
+					index = newIndex;
+				}
+			}
+		}
+		for (auto &e : v) {  //恢复，去除标记位
+			e = e>>1;
+		}
 	}
