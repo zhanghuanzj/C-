@@ -3783,9 +3783,10 @@ next() and hasNext() should run in average O(1) time and uses O(h) memory, where
 	        }
 	    }
 	};
+
 ## 124.Dungeon Game ##
 ![](http://i.imgur.com/s1KUaHh.png)
-地牢救公主
+地牢救公主                                                                                                           
 
 	class Solution {
 	public:
@@ -3800,4 +3801,26 @@ next() and hasNext() should run in average O(1) time and uses O(h) memory, where
 			}
 			return hp[0];
 		}
+	};
+
+## 125.Largest Number ##
+For example, given [3, 30, 34, 5, 9], the largest formed number is 9534330.
+
+	bool compare(string &s1,string &s2){
+	    return s1+s2>s2+s1;
+	}
+	class Solution {
+	public:
+	    string largestNumber(vector<int>& nums) {
+	        vector<string> number;
+	        for(int i=0;i<nums.size();++i){
+	            number.push_back(to_string(nums[i]));
+	        }
+	        sort(number.begin(),number.end(),compare);
+	        string result;
+	        for(int i=0;i<number.size();++i){
+	            result += number[i];
+	        }
+	        return result[0]=='0'?"0":result;
+	    }
 	};
