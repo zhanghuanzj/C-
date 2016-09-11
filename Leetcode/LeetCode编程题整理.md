@@ -3824,3 +3824,89 @@ For example, given [3, 30, 34, 5, 9], the largest formed number is 9534330.
 	        return result[0]=='0'?"0":result;
 	    }
 	};
+
+## 126.Repeated DNA Sequences ##
+All DNA is composed of a series of nucleotides abbreviated as A, C, G, and T, for example: "ACGAATTCCG". When studying DNA, it is sometimes useful to identify repeated sequences within the DNA.
+Write a function to find all the 10-letter-long sequences (substrings) that occur more than once in a DNA molecule.
+For example,
+
+	Given s = "AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT",
+	Return:
+	["AAAAACCCCC", "CCCCCAAAAA"].
+
+Code:
+
+	class Solution {
+	public:
+		vector<string> findRepeatedDnaSequences(string s) {
+			vector<string> result;
+			map<string,int> record;
+			int size = s.length();
+			for (int i=0;i<size-9;++i){
+				if (record.count(s.substr(i,10))==0){
+					record.insert(make_pair(s.substr(i,10),1));
+				}else{
+					record[s.substr(i,10)]++;
+				}
+			}
+			for (auto v : record){
+				if (v.second>1){
+					result.push_back(v.first);
+				}
+			}
+			return result;
+		}
+	};
+
+## 127.Reverse Bits ##
+00000010100101000001111010011100
+00111001011110000010100101000000
+
+	class Solution {
+	public:
+		uint32_t reverseBits(uint32_t n) {
+			uint32_t result = 0;
+			for (int i=0;i<32;++i){
+				if (n&1){
+					result |= 1<<(31-i);
+				}
+				n = n>>1;
+			}
+			return result;
+		}
+	};
+
+## 128.Number of 1 Bits ##
+Write a function that takes an unsigned integer and returns the number of ’1' bits it has (also known as the Hamming weight).
+For example, the 32-bit integer ’11' has binary representation 00000000000000000000000000001011, so the function should return 3.
+
+	class Solution {
+	public:
+	    int hammingWeight(uint32_t n) {
+	        int result = 0;
+	        while(n){
+	            ++result;
+	            n &= n-1;
+	        }
+	        return result;
+	    }
+	};
+
+## 129.House Robber ##
+You are a professional robber planning to rob houses along a street. Each house has a certain amount of money stashed, the only constraint stopping you from robbing each of them is that adjacent houses have security system connected and it will automatically contact the police if two adjacent houses were broken into on the same night.
+
+	class Solution {
+	public:
+	    int rob(vector<int>& nums) {
+	        int preTake = 0, preNTake = 0;
+	        for(auto n : nums){
+	            int money = preTake;
+	            preTake = preNTake + n;  //只能在前面没偷的基础上进行
+	            preNTake = max(money,preNTake);
+	        }
+	        return max(preTake,preNTake);
+	    }
+	};
+
+
+
