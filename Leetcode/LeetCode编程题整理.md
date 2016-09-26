@@ -3908,5 +3908,414 @@ You are a professional robber planning to rob houses along a street. Each house 
 	    }
 	};
 
+带环的
+
+	class Solution {
+	public:
+	    int rob(vector<int>& nums) {
+	        if(nums.size()==1) return nums[0];
+	        int preTake1 = 0,preNTake1 = 0;
+	        for(int i=0;i<(int)(nums.size()-1);++i){
+	            int take = preTake1;
+	            preTake1 = preNTake1+nums[i];
+	            preNTake1 = max(preNTake1,take);
+	        }
+	        int preTake2 = 0,preNTake2 = 0;
+	        for(int i=1;i<nums.size();++i){
+	            int take = preTake2;
+	            preTake2 = preNTake2+nums[i];
+	            preNTake2 = max(preNTake2,take);
+	        }
+	        return max(max(preTake1,preNTake1),max(preTake2,preNTake2));
+	    }
+	};
+## 130.Bitwise AND of Numbers Range ##
+Given a range [m, n] where 0 <= m <= n <= 2147483647, return the bitwise AND of all numbers in this range, inclusive.
+For example, given the range [5, 7], you should return 4.
+
+	class Solution {
+	public:
+		int rangeBitwiseAnd(int m, int n) {
+			int step = 0;
+			while(m!=n){
+			    m >>= 1;
+			    n >>= 1;
+			    ++step;
+			}
+			return m<<step;
+		}
+	};
+
+## 131.Happy Number ##
+A happy number is a number defined by the following process: Starting with any positive integer, replace the number by the sum of the squares of its digits, and repeat the process until the number equals 1 (where it will stay), or it loops endlessly in a cycle which does not include 1. Those numbers for which this process ends in 1 are happy numbers.
+
+Example: 19 is a happy number
 
 
+\\(1^2 + 9^2 = 82\\)
+\\(8^2 + 2^2 = 68\\)
+\\(6^2 + 8^2 = 100\\)
+\\(1^2 + 0^2 + 0^2 = 1\\)
+
+	class Solution {
+	public:
+	    bool isHappy(int n) {  //快慢指针的思想
+	        int slow = n,fast = squareSum(n);
+	        while(slow!=fast){
+	            slow = squareSum(slow);
+	            fast = squareSum(squareSum(fast));
+	        }
+	        return slow==1?true:false;
+	    }
+	private:
+	    int squareSum(int n){
+	        int sum = 0;
+	        while(n){
+	            sum += pow(n%10,2);
+	            n /= 10;
+	        }
+	        return sum;
+	    }
+	};
+
+## 132.Count Primes ##
+Count the number of prime numbers less than a non-negative number, n.
+埃式筛选法
+
+	class Solution {
+	public:
+	    int countPrimes(int n) {
+	        vector<bool> arr(n,true);
+	        int result = 0;
+	        for(int i=2;i<n;++i){
+	            if(arr[i]){
+	                ++result;
+	                for(int j=2*i;j<n;j+=i){
+	                    arr[j] = false;
+	                }
+	            }
+	        }
+	        return result;
+	    }
+	};
+## 133.Course Schedule ##
+There are a total of n courses you have to take, labeled from 0 to n - 1.
+Some courses may have prerequisites, for example to take course 0 you have to first take course 1, which is expressed as a pair: [0,1]
+Given the total number of courses and a list of prerequisite pairs, is it possible for you to finish all courses?
+For example:
+
+	2, [[1,0]]
+There are a total of 2 courses to take. To take course 1 you should have finished course 0. So it is possible.
+
+	2, [[1,0],[0,1]]
+There are a total of 2 courses to take. To take course 1 you should have finished course 0, and to take course 0 you should also have finished course 1. So it is impossible.
+
+类似于编译依赖的问题，也可以用入度出度来做
+
+	class Solution {
+	public:
+		bool canFinish(int numCourses, vector<pair<int, int>>& prerequisites) {
+			vector<set<int>> course(numCourses,set<int>());
+			vector<bool> visited(numCourses,false);
+			for(int i=0;i<prerequisites.size();++i){
+				course[prerequisites[i].first].insert(prerequisites[i].second);
+			}
+			for(int i=0;i<numCourses;++i){
+				if(isLoop(course,i,visited)){
+					return false;
+				}
+			}
+			return true;
+		}
+	private:
+		bool isLoop(vector<set<int>> &course,int x,vector<bool> &visited){
+			if (visited[x]){
+				return true;
+			}
+			visited[x] = true;
+			for (auto i : course[x]) {
+				if (isLoop(course,i,visited))
+				{
+					visited[x] = false;
+					return true;
+				}
+			}
+			visited[x] = false;
+			return false;
+		}
+	};
+
+**Course Schedule II**
+获取上课的顺序表
+
+	class Solution {
+	public:
+		vector<int> findOrder(int numCourses, vector<pair<int, int>>& prerequisites) {
+			vector<int> result,degree(numCourses,0);
+			vector<set<int>> graph(numCourses,set<int>());
+			for(int i=0;i<prerequisites.size();++i){
+				if (!graph[prerequisites[i].second].count(prerequisites[i].first)){
+					graph[prerequisites[i].second].insert(prerequisites[i].first);
+					degree[prerequisites[i].first]++;
+				}
+			}
+			int preSize = 0;
+			while(result.size()<numCourses){
+				for(int i=0;i<numCourses;++i){
+					if(degree[i]==0){
+						result.push_back(i);
+						degree[i] = -1;
+						for(auto c : graph[i]){
+							degree[c]--;
+						}
+					}
+				}
+				if (preSize==result.size()){
+					return vector<int>();
+				}
+				preSize = result.size();
+			}
+			return result;
+		}
+	};
+## 134.Kth Largest Element in an Array ##
+
+	class Solution {
+	public:
+	    int findKthLargest(vector<int>& nums, int k) {
+	        return solve(nums,0,nums.size()-1,k);
+	    }
+	    int solve(vector<int> &nums,int left,int right,int k){
+	        int v = nums[left];
+	        int i = left;
+	        for(int j=i+1;j<=right;++j){
+	            if(nums[j]>v){
+	                swap(nums[++i],nums[j]);
+	            }
+	        }
+	        swap(nums[left],nums[i]);
+	        int count = i-left+1;
+	        if(count==k) {
+	            return nums[i];
+	        }else if(count<k){
+	            return solve(nums,i+1,right,k-count);
+	        }else{
+	            return solve(nums,left,i-1,k);
+	        }
+	    }
+	};
+
+## 135.Contains Duplicate ##
+
+Given an array of integers, find out whether there are two distinct indices i and j in the array such that the difference between nums[i] and nums[j] is at most t and the difference between i and j is at most k.
+
+	class Solution {
+	public:
+		bool containsNearbyAlmostDuplicate(vector<int>& nums, int k, int t) {
+			set<int> window;
+			for (int i=0;i<nums.size();++i) {
+				if (i>k){
+					window.erase(nums[i-k-1]);
+				}
+				auto it = window.lower_bound(nums[i]-t);
+				if (it!=window.end() && abs(*it - nums[i])<=t){
+					return true;
+				}
+				window.insert(nums[i]);
+			}
+			return false;
+		}
+	};
+
+## 136.Verify Preorder Serialization of a Binary Tree ##
+	"9,3,4,#,#,1,#,#,2,#,6,#,#"
+Return true
+
+	"1,#"
+Return false
+
+	class Solution {
+	public:
+		bool isValidSerialization(string preorder) {
+			stack<char> st;
+			for (int i=preorder.size()-1;i>=0;--i){
+				if(preorder[i]==','){
+					continue;
+				}else if(preorder[i]=='#'){
+					st.push('#');
+				}else{
+					while (i>0&&preorder[i-1]!=','&&preorder[i-1]!='#'){//数字可能不止一位
+						--i;
+					}
+					if(st.size()>=2){
+						st.pop();
+					}else{
+						return false;
+					}
+				}
+			}
+			return st.size()==1;
+		}
+	};
+
+## 137. Count Complete Tree Nodes ##
+
+Given a complete binary tree, count the number of nodes.
+
+	class Solution {
+	public:
+	    int countNodes(TreeNode* root) {
+	        if(!root) return 0;
+	        int leftHeight = 0,rightHeight = 0;
+	        TreeNode *left = root,*right = root;
+	        while(left){
+	            ++leftHeight;
+	            left = left->left;
+	        }
+	        while(right){
+	            ++rightHeight;
+	            right = right->right;
+	        }
+	        if(leftHeight==rightHeight) return pow(2,leftHeight)-1;
+	        return countNodes(root->left)+countNodes(root->right)+1;
+	    }
+	};
+
+## 138.Number of Digit One ##
+	class Solution {
+	public:
+	    int countDigitOne(int n) {
+	        if(n<=0) return 0;
+	        long long count = 0;
+	        long long d = 1;
+	        while(n/d){
+	            long long left = n/(d*10);
+	            long long cur = n/d-left*10;
+	            long long right = n%d;
+	            if(cur==0){
+	                count += left*d;
+	            }else if(cur==1){
+	                count += left*d+right+1;
+	            }else{
+	                count += (left+1)*d;
+	            }
+	            d *= 10;
+	        }
+	        return count;
+	    }
+	};
+
+## 139.Palindrome Linked List ##
+Given a singly linked list, determine if it is a palindrome.
+
+	class Solution {
+	public: 
+	    bool isPalindrome(ListNode *head) {
+	        left = head;
+			return check(head);
+	    }
+		bool check(ListNode *right){
+			if (right==nullptr){
+				return true;
+			}
+			bool result = check(right->next)&&(right->val==left->val);
+			left = left->next;
+			return result;
+		}
+	private:
+		ListNode *left;
+	};
+
+## 140.Basic Calculator II ##
+	"3+2*2" = 7
+	" 3/2 " = 1
+	" 3+5 / 2 " = 5
+
+Code：
+
+	 class Solution {
+	 public:
+		 int calculate(string s) {
+			 istringstream is('+'+s+'+');
+			 char op;
+			 int result=0,n,prevalue=0;
+			 while (is>>op){
+				 if (op=='+'||op=='-'){
+					 result+=prevalue;
+					 is>>prevalue;
+					 prevalue *= （op=='+')?1:-1;
+				 }else{
+					 is>>n;
+					 prevalue = (op=='*'?)prevalue*n:prevalue/n;
+				 }
+			 }
+			 return result;
+		 }
+	 };
+
+## 141.Lowest Common Ancestor of a Binary Tree ##
+**BST：**
+
+	class Solution {
+	public:
+	    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+			if(root->val<p->val&&root->val<q->val){
+				return lowestCommonAncestor(root->right,p,q);
+			}else if(root->val>q->val&&root->val>p->val){
+				return lowestCommonAncestor(root->left,p,q);
+			}
+			return root;
+	    }
+	};
+
+**普通二叉树：**
+
+	class Solution {
+	public:
+	    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+	        if(root==nullptr||root==p||root==q) return root;
+	        TreeNode *left = lowestCommonAncestor(root->left,p,q);
+	        TreeNode *right = lowestCommonAncestor(root->right,p,q);
+	        if(left&&right) return root;
+	        return left==nullptr?right:left;
+	    }
+	};
+
+## 142.Sliding Window Maximum ##
+
+Given nums = [1,3,-1,-3,5,3,6,7], and k = 3.
+
+	Window position                Max
+	---------------               -----
+	[1  3  -1] -3  5  3  6  7       3
+	 1 [3  -1  -3] 5  3  6  7       3
+	 1  3 [-1  -3  5] 3  6  7       5
+	 1  3  -1 [-3  5  3] 6  7       5
+	 1  3  -1  -3 [5  3  6] 7       6
+	 1  3  -1  -3  5 [3  6  7]      7
+Therefore, return the max sliding window as [3,3,5,5,6,7].
+
+	class Solution {
+	public:
+		vector<int> maxSlidingWindow(vector<int>& nums, int k) {
+			vector<int> result;
+			if(!(nums.size()>=k&&k>0)) return result;
+			deque<int> dq;
+			for(int i=0;i<k&&i<nums.size();++i){
+				while(!dq.empty()&&nums[dq.back()]<=nums[i]){ //不为空，且元素<=当前元素
+					dq.pop_back();
+				}
+				dq.push_back(i);
+			}
+			for(int i=k;i<nums.size();++i){
+				result.push_back(nums[dq.front()]);
+				while(!dq.empty()&&nums[dq.back()]<=nums[i]){
+					dq.pop_back();
+				}
+				dq.push_back(i);
+				if(i-dq.front()>=k) dq.pop_front();
+			}
+			result.push_back(nums[dq.front()]);
+			return result;
+		}
+	};
