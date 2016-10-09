@@ -4319,3 +4319,271 @@ Therefore, return the max sliding window as [3,3,5,5,6,7].
 			return result;
 		}
 	};
+
+## 143.Ugly Number II ##
+	class Solution {
+	public:
+		int nthUglyNumber(int n) {
+			vector<int> ugly(1,1);
+			int index2 = 0,index3 = 0,index5 = 0;
+			for(int i=1;i<n;++i){
+				int value = min(min(ugly[index2]*2,ugly[index3]*3),ugly[index5]*5);
+				ugly.push_back(value);
+				if(value==ugly[index2]*2) ++index2;
+				if(value==ugly[index3]*3) ++index3;
+				if(value==ugly[index5]*5) ++index5;
+			}
+			return ugly.back();
+		}
+	};
+
+## 144.Serialize and Deserialize Binary Tree ##
+	class Codec {
+	public:
+		string serialize(TreeNode* root) {
+			string str;
+			serial(root,str);
+			return str.substr(1);
+		}
+		void serial(TreeNode *root,string &s){
+			if(root==nullptr) {
+				s += ",#";
+			}else{
+				s = s + "," + to_string(root->val);
+				serial(root->left,s);
+				serial(root->right,s);
+			}
+		}
+	
+		TreeNode* deserialize(string data) {
+			deque<string> dq;
+			int pre = 0;
+			for (int i=0;i<data.size();++i) {
+				if (data[i]==','){
+					dq.push_back(data.substr(pre,i-pre));
+					pre = i+1;
+				}
+			}
+			dq.push_back(data.substr(pre));
+			return deserial(dq);
+		}
+		TreeNode* deserial(deque<string>& dq){
+			string s = dq.front();
+			dq.pop_front();
+			if (s=="#"){
+				return nullptr;
+			}else{
+				TreeNode *node = new TreeNode(stoi(s));
+				node->left = deserial(dq);
+				node->right = deserial(dq);
+				return node;
+			}
+		}
+	};
+## 145.Different Ways to Add Parentheses ##
+Input: "2-1-1".
+
+	((2-1)-1) = 0
+	(2-(1-1)) = 2
+Output: [0, 2]
+
+	class Solution {
+	public:
+	    vector<int> diffWaysToCompute(string input) {
+	        if(record.find(input)!=record.end()) return record[input];
+	        vector<int> result;
+	        for(int i=0;i<input.size();++i){
+	            if(input[i]=='*'||input[i]=='+'||input[i]=='-'){
+	                vector<int> left = diffWaysToCompute(input.substr(0,i));
+	                vector<int> right = diffWaysToCompute(input.substr(i+1));
+	                for(auto v1 : left){
+	                    for(auto v2 : right){
+	                        int value = 0;
+	                        switch(input[i]){
+	                            case '*':
+	                                value = v1*v2;
+	                                break;
+	                            case '+':
+	                                value = v1+v2;
+	                                break;
+	                            case '-':
+	                                value = v1-v2;
+	                                break;
+	                        }
+	                        result.push_back(value);
+	                    }
+	                }
+	            }
+	        }
+	        if(result.empty()) result.push_back(stoi(input));
+	        record[input] = result;
+	        return result;
+	    }
+	    
+	private:
+	    map<string,vector<int>> record;
+	};
+
+## 146.Range Sum Query - Mutable ##
+Given nums = [1, 3, 5]
+
+	sumRange(0, 2) -> 9
+	update(1, 2)
+	sumRange(0, 2) -> 8
+![](http://i.imgur.com/3FjUEif.png)
+Code:
+
+	class NumArray {
+	public:
+		NumArray(vector<int> &nums):num(nums.size()+1,0),bit(nums.size()+1,0) {
+			for(int i=0;i<nums.size();++i){
+				update(i,nums[i]);
+			}
+		}
+	
+		void update(int i, int val) {
+			int index = i+1,diff = val - num[i+1];
+			while(index<num.size()){
+				bit[index] += diff;
+				index += (index&(-index)); //补末尾1
+			}
+			num[i+1] = val;
+		}
+	
+		int sumRange(int i, int j) {
+			return getSum(j)-getSum(i-1);
+		}
+	
+		int getSum(int i){
+			int index = i+1,sum = 0;
+			while(index){
+				sum += bit[index];
+				index &= index-1; //去末尾1
+			}
+			return sum;
+		}
+	private:
+		vector<int> num;
+		vector<int> bit;
+	};
+
+## 147. Water and Jug Problem ##
+You are given two jugs with capacities x and y litres. There is an infinite amount of water supply available. You need to determine whether it is possible to measure exactly z litres using these two jugs.
+**Example 1:** 
+
+	Input: x = 3, y = 5, z = 4
+	Output: True
+**Example 2:**
+
+	Input: x = 2, y = 6, z = 5
+	Output: False
+Code:
+
+	class Solution {
+	public:
+	    bool canMeasureWater(int x, int y, int z) {
+	        int k = gcd(x,y);
+	        if(z<=x+y&&(k==0||z%k==0))return true;//x=y=z=0
+	        return false;
+	    }
+	    int gcd(int a,int b){
+	        if(a<b) return gcd(b,a);
+	        if(b==0) return a;
+	        return gcd(b,a%b);
+	    }
+	};
+
+## 148.Largest Divisible Subset ##
+Given a set of distinct positive integers, find the largest subset such that every pair (Si, Sj) of elements in this subset satisfies: Si % Sj = 0 or Sj % Si = 0.
+If there are multiple solutions, return any subset is fine.
+
+**Example 1:**
+
+	nums: [1,2,3]
+	Result: [1,2] (of course, [1,3] will also be ok)
+**Example 2:**
+
+	nums: [1,2,4,8]
+	Result: [1,2,4,8]
+Code:
+
+	class Solution {
+	public:
+	    vector<int> largestDivisibleSubset(vector<int>& nums) {
+	        vector<int> result;
+	        if(nums.empty()) return result;
+	        sort(nums.begin(),nums.end(),greater<int>());
+	        vector<int> dp(nums.size(),1);
+	        vector<int> parent(nums.size(),-1);
+	        int index = 0;
+	        for(int i=1;i<nums.size();++i){
+	            for(int j=0;j<i;++j){
+	                if(nums[j]%nums[i]==0){
+	                    if(dp[i]<dp[j]+1){
+	                        dp[i] = dp[j]+1;
+	                        parent[i] = j;
+	                    }
+	                    if(dp[i]>dp[index]) index = i;
+	                }
+	            }
+	        }
+	        while(index!=-1){
+				result.push_back(nums[index]);
+				index = parent[index];
+			}
+	        return result;
+	    }
+	};
+
+## 149.Sum of Two Integers ##
+Calculate the sum of two integers a and b, but you are not allowed to use the operator + and -.
+
+	class Solution {
+	public:
+	    int getSum(int a, int b) {
+	        while(b){
+	            int temp = a^b;
+	            b = (a&b)<<1;
+	            a = temp;
+	        }
+	        return a;
+	    }
+	};
+## 150.Wiggle Subsequence ##
+摇摆序列，即一大一小...
+**Examples:**
+
+	Input: [1,7,4,9,2,5]
+	Output: 6
+	The entire sequence is a wiggle sequence.
+	
+	Input: [1,17,5,10,13,15,10,5,16,8]
+	Output: 7
+	There are several subsequences that achieve this length. One is [1,17,10,13,10,16,8].
+	
+	Input: [1,2,3,4,5,6,7,8,9]
+	Output: 2
+
+Code：
+
+	class Solution {
+	public:
+	    int wiggleMaxLength(vector<int>& nums) {
+	        if(nums.size()<2) return nums.size();
+	        int index = 1;
+	        while(index<nums.size()-1&&nums[index-1]==nums[index]){
+	            ++index;
+	        }
+	        if(nums[index]==nums[index-1]) return 1;
+	        bool small = nums[index]>nums[index-1];
+	        int count = 2;
+	        for(int i=index+1;i<nums.size();++i){
+	            if((nums[i]>nums[index]&&!small)||(nums[i]<nums[index]&&small)){
+	                ++count;
+	                small = !small;
+	            }
+	            index = i;
+	        }
+	        return count;
+	    }
+	};
