@@ -4623,3 +4623,91 @@ Therefore the output is 7.
 			return dp[target];
 		}
 	};
+## 152. Kth Smallest Element in a Sorted Matrix ##
+**Example:**
+
+	matrix = [
+	   [ 1,  5,  9],
+	   [10, 11, 13],
+	   [12, 13, 15]
+	],
+	k = 8,
+	
+	return 13.
+Code:
+
+	class Solution {
+	public:
+	    int kthSmallest(vector<vector<int>>& matrix, int k) {
+	        int left = matrix[0][0],right = matrix.back().back();
+	        while(left<right){
+	            int count = 0,mid = (left+right)/2;
+	            for(int i=0;i<matrix.size();++i){
+	                count += upper_bound(matrix[i].begin(),matrix[i].end(),mid)-matrix[i].begin();
+	            }
+	            if(count<k) left = mid+1; //少于目标个数，猜测太小需要增大
+	            else right = mid; //不断逼近
+	        }
+	        return left;
+	    }
+	};
+## 153.Linked List Random Node ##
+
+取第i个节点的概率为1/N
+
+	p(i)=(1/i)*(i-1/i+1)*...*(N-2/N-1)*(N-1/N)
+	第i项之前与之无关，如果选择第i项则后面必须保证取不到
+Code:
+
+	class Solution {
+	public:
+	    int getRandom(ListNode *node) {
+	        ListNode *result = node;
+	        ListNode *p = node->next;
+	        for(int i=2;p!=nullptr;++i){
+	            if(random()%i==0){
+	                result = p;
+	            }
+	            p = p->next;
+	        }
+	        return result->val;
+	    }
+	};
+
+## 154.Partition Equal Subset Sum ##
+Given a non-empty array containing only positive integers, find if the array can be partitioned into two subsets such that the sum of elements in both subsets is equal.
+
+Note:
+Each of the array element will not exceed 100.
+The array size will not exceed 200.
+**Example 1:**
+
+	Input: [1, 5, 11, 5]
+
+Output: true
+
+Explanation: The array can be partitioned as [1, 5, 5] and [11].
+**Example 2:**
+
+	Input: [1, 2, 3, 5]
+
+Output: false
+
+Explanation: The array cannot be partitioned into equal sum subsets.
+
+	class Solution {
+	public:
+		bool canPartition(vector<int>& nums) {
+			int size = nums.size();
+			vector<bool> dp(size*100+1,false);
+			dp[0] = true;
+			int sum = 0;
+			for(int i=1;i<=size;++i){
+				sum += nums[i-1];
+				for(int j=sum;j>=nums[i-1];--j){ //避免使用现有的进行组合，所以要从大到小
+					dp[j] = dp[j]||dp[j-nums[i-1]];
+				}
+			}
+			return sum&1?false:dp[sum/2];
+		}
+	};
